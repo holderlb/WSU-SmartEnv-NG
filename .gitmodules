@@ -1,0 +1,3 @@
+[submodule "frouros"]
+	path = frouros
+	url = https://github.com/IFCA-Advanced-Computing/frouros
