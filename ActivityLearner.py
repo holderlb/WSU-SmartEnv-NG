@@ -13,7 +13,6 @@ MAX_EXAMPLES = 100000
 RF_N_ESTIMATORS = 100
 RF_MAX_DEPTH = None
 RF_MIN_SAMPLES_SPLIT = 20
-RF_N_JOBS = 1
 
 # Util for managing multiple testbeds.
 class ActivityManager:
@@ -130,7 +129,7 @@ class ActivityLearner:
     def get_new_model(self):
         model = RandomForestClassifier(n_estimators=RF_N_ESTIMATORS, bootstrap=True, criterion="entropy",
                                          min_samples_split=RF_MIN_SAMPLES_SPLIT, max_depth=RF_MAX_DEPTH,
-                                         n_jobs=RF_N_JOBS, class_weight='balanced')
+                                         class_weight='balanced')
         return model
     
     def save(self, filename):

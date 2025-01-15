@@ -19,13 +19,6 @@
 # **  Contact: Diane J. Cook (djcook@wsu.edu)                                                   ** #
 # ************************************************************************************************ #
 
-import copy
-import optparse
-import random
-import pickle
-import json
-import sys
-
 from ActivityLearner import ActivityManager
 from ConceptDriftDetector import ConceptDriftDetector
 from DataDriftDetector import DataDriftDetector
@@ -44,20 +37,10 @@ class SmartEnvAgent:
         self.log = logger
         self.novelty_detection = novelty_detection # can be None, CDD, or DDD
 
-        # This variable can be set to true and the system will attempt to end training at the
-        # completion of the current episode, or sooner if possible.
-        self.end_training_early = True
-
         # This variable is checked only during the evaluation phase.  If set to True the system
         # will attempt to cleanly end the experiment at the conclusion of the current episode,
         # or sooner if possible.
         self.end_experiment_early = False
-
-        # If you need values from the command line, you can get values from your custom options
-        # here.  Set custom options in the _add_ta2_command_line_options() function.
-        #options = self._get_command_line_options()
-        #my_custom_value = options.custom_value
-        #self.log.debug('Command line custom value is: {}'.format(my_custom_value))
 
         # Initialize any needed objects
         self.AL = ActivityManager(TESTBED_SAMPLE_FEATURE_VECTORS)
@@ -72,33 +55,6 @@ class SmartEnvAgent:
         self.trial_number = None
 
         return
-
-    def _add_ta2_command_line_options(self, parser: optparse.OptionParser):
-        """If you do not want to use this function, you can remove it from TA2.py to clean up
-        your code.  This is already defined in the parent class.
-
-        This function allows you to easily add custom arguments to the command line parser.  To
-        see what is already defined, please see the _add_command_line_options() function in the
-        parent class found in options/TA2_logic.py.
-
-        Parameters
-        ----------
-        parser : optparse.OptionParser
-            This is the command line parser object, you can add custom entries to it here.
-
-        Returns
-        -------
-        optparse.OptionParser
-            The parser object that you have added additional options to.
-        """
-
-        # TODO: Maybe a novelty probability threshold, or concept drift method selection and parameters
-
-        parser.add_option("--custom-value",
-                          dest="custom_value",
-                          help="Example for adding custom options to the command line parser.",
-                          default="HelloWorld!")
-        return parser
 
     def train_model(self):
         """Train your model here if needed.  If you don't need to train, just leave the function
