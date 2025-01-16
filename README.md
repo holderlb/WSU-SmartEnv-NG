@@ -34,8 +34,11 @@ used to create an appropriate environment using the command:
 conda env create -f smartenv.yml
 ```
 
-Next, you'll need one or more of the datasets referenced below stored locally. Let's assume you expand these
-files into the `./data` folder, creating subfolders `smartenv_012345`, and `smartenv_0678`.
+Next, the datasets referenced below stored locally. Let's assume you expand these
+files into the `./data` folder, creating subfolders `smartenv_012345` and `smartenv_0678`,
+and training data files `smartenv-12bc911e4b7e-data.csv`, `smartenv-4cdb124c42f4-data.csv`,
+and `smartenv-72c576abcdda-data.csv`, one for each smart environment testbed ID.
+
 
 Then, you can run the evaluation using the following sample command:
 
@@ -69,3 +72,6 @@ The level 0 trials are different than the above level 0 trials, but are added he
 trials can be included along with evaluation of level 6-8, if desired.
 The data is available [here](https://ailab.wsu.edu/AIQ/smartenv/smartenv_0678.zip) (11GB).
 
+* Training data: Training data for each of the three smart environment testbeds. These three CSV files should be
+put in the same location as the unzipped folders above.
+The data is available [here](https://ailab.wsu.edu/AIQ/smartenv/smartenv_train.zip) (1.5MB)

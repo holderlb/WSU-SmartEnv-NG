@@ -58,8 +58,8 @@ class SmartEnvAgent:
 
     def train_model(self):
         """Train your model here if needed.  If you don't need to train, just leave the function
-        empty.  After this completes, the logic calls save_model() and reset_model() as needed
-        throughout the rest of the experiment.
+        empty.  After this completes, the logic calls reset_model() as needed throughout the rest
+        of the experiment.
         """
         self.log.info('Training model with {}.'.format(self.AL.get_num_examples()))
 

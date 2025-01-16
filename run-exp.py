@@ -26,10 +26,11 @@ import logging
 from SmartEnvAgent import SmartEnvAgent
 
 DEBUG = False
-MODEL_FILE = 'model/smartenv-model'
 BUDGET = 0.5
 NOVELTY_LEVELS = [200, 201, 202, 203, 204, 205, 206, 207, 208]
 NOVELTY_DIFFICULTIES = ['easy', 'medium', 'hard']
+TRAINING_FILE_PREFIX = 'smartenv'
+MODEL_FILE_PREFIX = 'model'
 
 def run_experiment(args, logger): # serial
     experiment_id = args.experiment_id
@@ -61,8 +62,8 @@ def run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty
     novelty_level = trial['novelty']
     novelty_visibility = trial['novelty_visibility']
     novelty_difficulty = trial['difficulty']
-    model_file = MODEL_FILE
-    agent.reset_model(model_file)
+    training_data_path = os.path.join(experiment_path, TRAINING_FILE_PREFIX)
+    agent.reset_model(training_data_path)
     novelty_description = {'trial_id': trial_id, 'novelty': novelty_level, 'visibility': novelty_visibility, 'difficulty': novelty_difficulty}
     agent.trial_start(trial_index, novelty_description)
     novelty_predicted = False
@@ -95,7 +96,6 @@ def run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty
             # Evaluate prediction, update performance and feedback dict
             if prediction == feature_label:
                 num_correct += 1
-                #num_correct_all += 1
             performance = num_correct / num_instances
             # if novelty_detection=CDD|DDD and learning=T, then feedback only after novelty_predicted, but keep going
             # if novelty_detection=CDD|DDD and learning=F, then no feedback ever and stop after novelty
@@ -118,7 +118,10 @@ def run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty
             out_file.write(f'{trial_index},{trial_id},{novelty_level},{novelty_difficulty},{novelty_visibility},{episode_index},{performance},{novelty_initiated},{novelty_predicted}\n')
         if (not learning) and novelty_detection and novelty_initiated and novelty_predicted:
             break # stop early
-        
+        # Save model at the end of each episode, overwriting previous model (uncomment, if desired)
+        #if learning:
+        #    model_path = os.path.join(experiment_path, MODEL_FILE_PREFIX)
+        #    agent.save_model(model_path)
         if DEBUG:
             break
 

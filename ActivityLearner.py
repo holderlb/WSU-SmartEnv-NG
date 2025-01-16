@@ -45,12 +45,6 @@ class ActivityManager:
             print('Current test beds:', self.test_beds.keys())
         return
 
-    # Below functions just call the testbed specific AL's functions :)
-    #def add_data(self, feature_vector, feature_label):
-    #    # Make sure we are on the correct testbed
-    #    self.selector(feature_vector)
-    #    return self.test_beds[self.current_test_bed].add_data(feature_vector, feature_label)
-
     def predict(self, feature_vector):
         self.selector(feature_vector)
         return self.test_beds[self.current_test_bed].predict(feature_vector)
