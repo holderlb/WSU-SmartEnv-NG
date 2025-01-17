@@ -41,6 +41,12 @@ DETECTION_UNKNOWN = 'unknown'
 DETECTION_TRANSLATION = dict({0: DETECTION_UNKNOWN, 1: DETECTION_KNOWN})
 FLOAT_NEAR_ZERO = 0.00001 # used as placeholder for zero denominators
 
+def np_mean(x, axis=0):
+    if len(x) > 0:
+        return np.mean(x, axis)
+    else:
+        return 0
+
 class Analysis():
     def __init__(self, options):
         self.experiment_id = options.experiment_id
@@ -303,12 +309,12 @@ class Analysis():
 
             # Preventing dividing by zero by setting p_pre_beta to be small if = 0 (This should
             # never happen but just in case)
-            p_pre_beta = [float(np.mean(sota_pre_novelty[i])) if np.mean(sota_pre_novelty[i]) > 0
+            p_pre_beta = [float(np_mean(sota_pre_novelty[i])) if np_mean(sota_pre_novelty[i]) > 0
                             else FLOAT_NEAR_ZERO for i in range(len(sota_pre_novelty))]
-            p_post_alpha_means = [float(np.mean(ta2_post_novelty_m[i]))
+            p_post_alpha_means = [float(np_mean(ta2_post_novelty_m[i]))
                             for i in range(len(ta2_post_novelty_m))]
 
-            #unknown_m3[configuration] = np.mean(
+            #unknown_m3[configuration] = np_mean(
             #    [p_post_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_alpha_means))])
             m3_values = [p_post_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_alpha_means))]
             unknown_m3[configuration] = self.get_stats(m3_values)
@@ -320,7 +326,7 @@ class Analysis():
                                     range(len(ta2_data[configuration]))]
             ta2_post_novelty_first_m = self.to_float(ta2_post_novelty_first_m)
 
-            p_post_first_alpha_means = [float(np.mean(ta2_post_novelty_first_m[i]))
+            p_post_first_alpha_means = [float(np_mean(ta2_post_novelty_first_m[i]))
                             for i in range(len(ta2_post_novelty_first_m))]
             m3_1_values = [p_post_first_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_first_alpha_means))]
             unknown_m3_1[configuration] = self.get_stats(m3_1_values)
@@ -381,7 +387,7 @@ class Analysis():
                             else FLOAT_NEAR_ZERO for i in range(len(sota_post_novelty_m))]
 
             # AM2: APTIs (old, un-normalized)
-            #unknown_am2[configuration] = self.get_stats( #np.mean( # LBH: with stats
+            #unknown_am2[configuration] = self.get_stats( #np_mean( # LBH: with stats
             #    [p_post_alpha[i] / p_post_beta[i] for i in range(len(p_post_alpha))])
             
             # AM2: APTIs (new, normalized)
@@ -432,10 +438,10 @@ class Analysis():
             ta2_pre_novelty = [ta2_data[configuration][i]['performance']
                                 [:ta2_novelty_introduced_indices[configuration][i]].tolist()
                                 for i in range(len(ta2_data[configuration]))]
-            ta2_post_means = [float(np.mean(ta2_post_novelty[i]))
+            ta2_post_means = [float(np_mean(ta2_post_novelty[i]))
                                 if len(ta2_post_novelty[i]) > 0 else 0
                                 for i in range(len(ta2_data[configuration]))]
-            ta2_pre_means = [float(np.mean(ta2_pre_novelty[i]))
+            ta2_pre_means = [float(np_mean(ta2_pre_novelty[i]))
                                 if len(ta2_pre_novelty[i]) > 0 else 0
                                 for i in range(len(ta2_data[configuration]))]
             ta2_abs_diffs = np.abs(np.subtract(ta2_post_means, ta2_pre_means))
@@ -454,11 +460,11 @@ class Analysis():
                         trial_dict['nrm'] = 0
             
             # NRM beta/baseline
-            sota_post_means = [np.mean(sota_post_novelty[i])
+            sota_post_means = [np_mean(sota_post_novelty[i])
                                 if len(sota_post_novelty[i]) > 0 else 0
                                 for i in range(len(sota_data[configuration]))]
             sota_post_means = self.to_float(sota_post_means)
-            sota_pre_means = [np.mean(sota_pre_novelty[i])
+            sota_pre_means = [np_mean(sota_pre_novelty[i])
                                 if len(sota_pre_novelty[i]) > 0 else 0
                                 for i in range(len(sota_data[configuration]))]
             sota_pre_means = self.to_float(sota_pre_means)
@@ -498,9 +504,9 @@ class Analysis():
                                                 [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m] # yes, ta2 (avoids computing for sota, which should be the same)
                                                 .tolist() for i in
                                                 range(len(sota_data[configuration]))]
-                p_post_first_beta_means = [np.mean(sota_post_novelty_first_m[i])
+                p_post_first_beta_means = [np_mean(sota_post_novelty_first_m[i])
                                             for i in range(len(sota_post_novelty_first_m))]
-                p_post_beta_means = [np.mean(sota_post_novelty_m[i])
+                p_post_beta_means = [np_mean(sota_post_novelty_m[i])
                                         for i in range(len(sota_post_novelty_m))]
                 for trial,au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m in \
                         zip(ta2_data[configuration],
@@ -621,9 +627,9 @@ class Analysis():
 
                 # Preventing dividing by zero by setting p_pre_beta to be small if = 0 (This should
                 # never happen but just in case)
-                p_pre_beta = [float(np.mean(sota_pre_novelty[i])) if np.mean(sota_pre_novelty[i]) > 0
+                p_pre_beta = [float(np_mean(sota_pre_novelty[i])) if np_mean(sota_pre_novelty[i]) > 0
                                 else FLOAT_NEAR_ZERO for i in range(len(sota_pre_novelty))]
-                p_post_alpha_means = [float(np.mean(ta2_post_novelty_m[i]))
+                p_post_alpha_means = [float(np_mean(ta2_post_novelty_m[i]))
                                 for i in range(len(ta2_post_novelty_m))]
                 
                 m4_values = [p_post_alpha_means[i] / p_pre_beta[i]
@@ -635,7 +641,7 @@ class Analysis():
                                             [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m]
                                         .tolist() for i in
                                         range(len(ta2_data[configuration]))]
-                p_post_first_alpha_means = [float(np.mean(ta2_post_novelty_first_m[i]))
+                p_post_first_alpha_means = [float(np_mean(ta2_post_novelty_first_m[i]))
                                 for i in range(len(ta2_post_novelty_first_m))]
                 m4_1_values = [p_post_first_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_first_alpha_means))]
                 known_m4_1[configuration] = self.get_stats(m4_1_values)
@@ -671,7 +677,7 @@ class Analysis():
                                 else FLOAT_NEAR_ZERO for i in range(len(sota_post_novelty_m))]
 
                 # AM2: APTIg (old, un-normalized)
-                #known_am2[configuration] = self.get_stats( #np.mean( # LBH: with stats
+                #known_am2[configuration] = self.get_stats( #np_mean( # LBH: with stats
                 #    [p_post_alpha[i] / p_post_beta[i] for i in range(len(p_post_alpha))])
                 
                 # AM2: APTIg (new, normalized)
@@ -717,10 +723,10 @@ class Analysis():
                 ta2_pre_novelty = [ta2_data[configuration][i]['performance']
                                     [:ta2_novelty_introduced_indices[configuration][i]].tolist()
                                     for i in range(len(ta2_data[configuration]))]
-                ta2_post_means = [float(np.mean(ta2_post_novelty[i]))
+                ta2_post_means = [float(np_mean(ta2_post_novelty[i]))
                                     if len(ta2_post_novelty[i]) > 0 else 0
                                     for i in range(len(ta2_data[configuration]))]
-                ta2_pre_means = [float(np.mean(ta2_pre_novelty[i]))
+                ta2_pre_means = [float(np_mean(ta2_pre_novelty[i]))
                                     if len(ta2_pre_novelty[i]) > 0 else 0
                                     for i in range(len(ta2_data[configuration]))]
                 ta2_abs_diffs = np.abs(np.subtract(ta2_post_means, ta2_pre_means))
@@ -739,10 +745,10 @@ class Analysis():
                             trial_dict['nrm'] = 0
                 
                 # NRM beta/baseline              
-                sota_post_means = [np.mean(sota_post_novelty[i])
+                sota_post_means = [np_mean(sota_post_novelty[i])
                                     if len(sota_post_novelty[i]) > 0 else 0
                                     for i in range(len(sota_data[configuration]))]
-                sota_pre_means = [np.mean(sota_pre_novelty[i])
+                sota_pre_means = [np_mean(sota_pre_novelty[i])
                                     if len(sota_pre_novelty[i]) > 0 else 0
                                     for i in range(len(sota_data[configuration]))]
                 sota_abs_diffs = np.abs(np.subtract(sota_post_means, sota_pre_means))
@@ -779,9 +785,9 @@ class Analysis():
                                                     [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m] # yes, ta2 (avoids computing for sota, which should be the same)
                                                     .tolist() for i in
                                                     range(len(sota_data[configuration]))]
-                    p_post_first_beta_means = [np.mean(sota_post_novelty_first_m[i])
+                    p_post_first_beta_means = [np_mean(sota_post_novelty_first_m[i])
                                                 for i in range(len(sota_post_novelty_first_m))]
-                    p_post_beta_means = [np.mean(sota_post_novelty_m[i])
+                    p_post_beta_means = [np_mean(sota_post_novelty_m[i])
                                             for i in range(len(sota_post_novelty_m))]
                     for trial,au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m in \
                             zip(ta2_data[configuration],
@@ -1265,7 +1271,7 @@ class Analysis():
         stats = dict()
         stats['min'] = np.amin(arr)
         stats['max'] = np.amax(arr)
-        stats['mean'] = np.mean(arr)
+        stats['mean'] = np_mean(arr)
         stats['median'] = np.median(arr)
         normalizer = stats['max'] - stats['min']
         if normalizer == 0:
@@ -1518,7 +1524,7 @@ class Analysis():
         for configuration in ta2_episode_data:
             ta2_data = ta2_episode_data[configuration]
             sota_data = sota_episode_data[configuration]
-            novelty_introduced_index = np.mean(
+            novelty_introduced_index = np_mean(
                 novelty_introduced_indices[configuration])
             novelty_introduced_index_max = np.max(
                 novelty_introduced_indices[configuration])
@@ -1549,8 +1555,8 @@ class Analysis():
                     shifted_array = prefix_array + xnp
                 trunc_array = shifted_array[:len(xnp)]
                 sota_performance_shifted.append(np.array(trunc_array))
-            ta2_average_performance = np.mean(ta2_performance_shifted, axis=0)
-            sota_average_performance = np.mean(sota_performance_shifted, axis=0)
+            ta2_average_performance = np_mean(ta2_performance_shifted, axis=0)
+            sota_average_performance = np_mean(sota_performance_shifted, axis=0)
 
             plt.ylim(0.0, 1.05) # LBH: changed upper limit from 1.0 to 1.05 to clearly see 1.0 performance
             plt.ylabel('Performance')
@@ -1592,7 +1598,7 @@ class Analysis():
         plt.figure()
         
         # ----- begin: same code inside "for configuration" loop in generate_average_plots
-        novelty_introduced_index = np.mean(
+        novelty_introduced_index = np_mean(
                 novelty_introduced_indices)
         novelty_introduced_index_max = np.max(
                 novelty_introduced_indices)
@@ -1623,8 +1629,8 @@ class Analysis():
                 shifted_array = prefix_array + xnp
             trunc_array = shifted_array[:len(xnp)]
             sota_performance_shifted.append(np.array(trunc_array))
-        ta2_average_performance = np.mean(ta2_performance_shifted, axis=0)
-        sota_average_performance = np.mean(sota_performance_shifted, axis=0)
+        ta2_average_performance = np_mean(ta2_performance_shifted, axis=0)
+        sota_average_performance = np_mean(sota_performance_shifted, axis=0)
 
         plt.ylim(0.0, 1.05) # LBH: changed upper limit from 1.0 to 1.05 to clearly see 1.0 performance
         plt.ylabel('Performance')
