@@ -113,14 +113,10 @@ class Analysis():
                                                                     sota_experiment_trials)
 
         # Get all data needed from episodes corresponding to all trial ids
-        
-        # LBH: Add 2rd argument: True -> known (given detection),
-        #                        False -> unknown (system detection)
-        # LBH: Add 3rd argument to pass in appropriate results dataframe
-        ta2_known_episode_data = self.get_episode_data(ta2_known_trial_ids, True, self.agent_results_df) 
-        ta2_unknown_episode_data = self.get_episode_data(ta2_unknown_trial_ids, False, self.agent_results_df)
-        sota_known_episode_data = self.get_episode_data(sota_known_trial_ids, True, self.baseline_results_df)
-        sota_unknown_episode_data = self.get_episode_data(sota_unknown_trial_ids, False, self.baseline_results_df)
+        ta2_known_episode_data = self.get_episode_data(ta2_known_trial_ids, self.agent_results_df) 
+        ta2_unknown_episode_data = self.get_episode_data(ta2_unknown_trial_ids, self.agent_results_df)
+        sota_known_episode_data = self.get_episode_data(sota_known_trial_ids, self.baseline_results_df)
+        sota_unknown_episode_data = self.get_episode_data(sota_unknown_trial_ids, self.baseline_results_df)
 
         # Get novelty introduction indices for each episode as well as CDT info
         ta2_known_novelty_introduced_indices, _, _, _, _, ta2_known_true_negative_counts, _ = \
@@ -1403,7 +1399,6 @@ class Analysis():
         """Gets all of the necessary data from episodes corresponding to given trials and results."""
         self.log.debug('get_episode_data()')
         episodes = dict()
-
         for configuration in experiment_trials:
             episodes[configuration] = []
             for trial_id in experiment_trials[configuration]:
