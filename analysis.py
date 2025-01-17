@@ -1106,7 +1106,7 @@ class Analysis():
     def add_characterization(self, trial_dict, trial):
         # Get characterization for last episode in trial and add components to trial dict
         num_episodes = len(trial['trial_num'])
-        nov_char_dict = trial['novelty_characterization'][num_episodes-1]
+        nov_char_dict = trial.iloc[num_episodes-1]['novelty_characterization']
         if type(nov_char_dict) is str:
             nov_char_dict = json.loads(nov_char_dict)
         if 'novelty_characterization' in nov_char_dict: # special case for PARC and Rutgers
