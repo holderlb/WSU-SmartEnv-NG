@@ -77,7 +77,7 @@ class Analysis():
             self.agent_results_df = pd.read_csv(agent_results_file)
 
         # Setup logging
-        file_handler = logging.FileHandler(self.logfile)
+        file_handler = logging.FileHandler(self.logfile, mode='w')
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(formatter)
         self.log = logging.getLogger('analysis')
