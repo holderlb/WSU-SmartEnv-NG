@@ -1434,7 +1434,7 @@ class Analysis():
                 results = results.rename(columns={'novelty_predicted': 'novelty_detected', 'trial_index': 'trial_num'})
                 results['novelty_characterization'] = json.dumps({'source': 'local'})
                 episodes[configuration].append(results)
-            episodes[configuration].sort(key=lambda i: i['trial_num'][0]) # LBH: sorting by 'trial_num', not 'trial_id'
+            episodes[configuration].sort(key=lambda i: i.iloc[0]['trial_num']) # LBH: sorting by 'trial_num', not 'trial_id'
         return episodes
 
     def get_novelty_introduced_indices(self, episode_data, hidden=False):
