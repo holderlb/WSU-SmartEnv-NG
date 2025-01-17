@@ -22,15 +22,11 @@
 # **  Contact: Diane J. Cook (djcook@wsu.edu)                                                   ** #
 # ************************************************************************************************ #
 
-
 import csv
-#import sys
 import os
 import optparse
 import json
-#from configparser import ConfigParser
 import subprocess
-#import psycopg2
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,25 +39,7 @@ DIFFICULTY_EASY = 'easy'
 DETECTION_KNOWN = 'known'
 DETECTION_UNKNOWN = 'unknown'
 DETECTION_TRANSLATION = dict({0: DETECTION_UNKNOWN, 1: DETECTION_KNOWN})
-
-# Keep episode and size numbers from SQL queries as integers in get_episode_data (LBH)
-#from psycopg2.extensions import register_adapter, AsIs
-
-#TA2_PLOT_LABEL = 'RETRAIN' # Label used in plots (default = 'TA2')
-
-#def adapt_numpy_int64(numpy_int64):
-#    """ Adapting numpy.int64 type to SQL-conform int type using psycopg extension, see [1]_ for
-#    more info.
-#    References
-#    ----------
-#    .. [1] http://initd.org/psycopg/docs/advanced.html#adapting-new-python-types-to-sql-syntax
-#    """
-#    return AsIs(numpy_int64)
-
-#register_adapter(np.int64, adapt_numpy_int64)
-
 FLOAT_NEAR_ZERO = 0.00001 # used as placeholder for zero denominators
-
 
 class Analysis():
     def __init__(self, options):
@@ -1421,7 +1399,7 @@ class Analysis():
         return ta2_known_trial_ids, ta2_unknown_trial_ids, sota_known_trial_ids, \
             sota_unknown_trial_ids
 
-    def get_episode_data(self, experiment_trials, known, results_df):
+    def get_episode_data(self, experiment_trials, results_df):
         """Gets all of the necessary data from episodes corresponding to given trials and results."""
         self.log.debug('get_episode_data()')
         episodes = dict()
@@ -1430,6 +1408,7 @@ class Analysis():
             episodes[configuration] = []
             for trial_id in experiment_trials[configuration]:
                 results = results_df[results_df['trial_id'] == trial_id]
+                results = results.copy()
                 results['novelty_detected'] = (results['novelty_probability'] >= results['novelty_threshold'])
                 results['novelty_characterization'] = json.dumps({'source': 'local'})
                 episodes[configuration].append(results)
