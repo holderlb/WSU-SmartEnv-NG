@@ -1062,7 +1062,7 @@ class Analysis():
                                 stderr=subprocess.STDOUT,
                                 close_fds=True)
         output = p.stdout.read()
-        self.log.info(output)
+        self.log.debug(output)
 
         # Compress the results and remove the source.
         cmd = 'zip -m -r {}.zip {}'.format(path, path)
@@ -1073,18 +1073,7 @@ class Analysis():
                                 stderr=subprocess.STDOUT,
                                 close_fds=True)
         output = p.stdout.read()
-        self.log.info(output)
-        
-        # Remove path, which is now empty.
-        cmd = 'rmdir {}'.format(path)
-        p = subprocess.Popen(cmd,
-                                shell=True,
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                close_fds=True)
-        output = p.stdout.read()
-        self.log.info(output)
+        self.log.debug(output)
 
         return
     
@@ -1320,9 +1309,7 @@ class Analysis():
         """Uses the provided experiment id to find trial ids that correspond
         to it. Separates cases where novelty was hidden from cases where
         novelty was given"""
-        self.log.debug(
-            'get_experiment_trials(experiment_id={})'.format(self.experiment_id))
-        
+        self.log.debug('get_experiment_trials(experiment_id={})'.format(self.experiment_id))
         trials = results_df.drop_duplicates(subset=['trial_index', 'trial_id', 'novelty_level',
                                                          'novelty_difficulty','novelty_visibility'])
         return trials
@@ -1365,13 +1352,23 @@ class Analysis():
                 results['novelty_detected'] = (results['novelty_probability'] >= results['novelty_threshold'])
                 results['novelty_characterization'] = json.dumps({'source': 'local'})
                 episodes[configuration].append(results)
+
+                # Debug output
+                self.log.debug(f'EPISODE DATA (configuration={configuration}, trial={results.iloc[0]['trial_index']}, trial_id={trial_id})')
+                self.log.debug("Episode\tPerf\tNovel\tProb >= Threshold")
+                index = 0
+                for perf,nov_init,nov_prob,nov_thresh,nov_det in zip(
+                    results['performance'],results['novelty_initiated'],results['novelty_probability'],
+                    results['novelty_threshold'],results['novelty_detected']):
+                    index += 1
+                    self.log.debug(f'{index}\t{perf}\t{nov_init}\t{nov_prob} >= {nov_thresh} : {nov_det}')
+
             episodes[configuration].sort(key=lambda i: i.iloc[0]['trial_index'])
         return episodes
 
     def get_novelty_introduced_indices(self, episode_data, hidden=False):
         """Gets episode indices when novelty was introduced"""
-        self.log.debug(
-            'get_novelty_introduced_indices(hidden={})'.format(hidden))
+        self.log.debug('get_novelty_introduced_indices(hidden={})'.format(hidden))
         novelty_introduced_indices = dict()
         false_positive_counts = dict()
         true_positive_counts = dict()
@@ -1666,8 +1663,7 @@ class Analysis():
         return
 
     def configuration_to_natural_words(self, configuration):
-        self.log.debug(
-            'configuration_to_natural_words(configuration={})'.format(configuration))
+        self.log.debug('configuration_to_natural_words(configuration={})'.format(configuration))
         if configuration == 'all':
             return 'All_Trials'
         if configuration in self.possible_novelties:
