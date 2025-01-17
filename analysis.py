@@ -56,7 +56,7 @@ class Analysis():
         self.domain_name = options.domain_name
         self.use_possible_novelties = options.use_novelty_list
         self.use_possible_difficulties = options.use_difficulty_list
-        self.use_visibility_list = True
+        self.use_visibility_list = options.use_visibility_list
         self.possible_novelties = list([200, 201, 202, 203, 204, 205, 206, 207, 208])
         self.possible_difficulties = list(['easy', 'medium', 'hard'])
         self.detection_conditions = list(['known', 'unknown'])
