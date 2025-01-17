@@ -124,3 +124,14 @@ The data is available [here](https://ailab.wsu.edu/AIQ/smartenv/smartenv_0678.zi
 * Training data: Training data for each of the three smart environment testbeds. These three CSV files should be
 put in the same location as the unzipped folders above.
 The data is available [here](https://ailab.wsu.edu/AIQ/smartenv/smartenv_train.zip) (1.5MB)
+
+## Acknowledgements
+
+For more information, contact Larry Holder (<holder@wsu.edu>).
+
+Thanks to WSU colleagues Diane Cook, Chris Pereyda, and Brian Thomas.
+
+This research was sponsored by the Defense Advanced Research
+Projects Agency (DARPA) and the Army Research Office (ARO) and was accomplished
+under Cooperative Agreement Number W911NF-20-2-0004.
+
