@@ -1570,21 +1570,21 @@ class Analysis():
         for novelty_level in self.possible_novelties:
             tmp_data = []
             for difficulty_level in self.possible_difficulties:
-                index = novelty_level + '_' + difficulty_level
+                index = str(novelty_level) + '_' + difficulty_level
                 tmp_data += data[index]
-            data[novelty_level] = tmp_data
+            data[str(novelty_level)] = tmp_data
         # Create groups for each difficulty level including all novelty levels
         for difficulty_level in self.possible_difficulties:
             tmp_data = []
             for novelty_level in self.possible_novelties:
-                index = novelty_level + '_' + difficulty_level
+                index = str(novelty_level) + '_' + difficulty_level
                 tmp_data += data[index]
             data[difficulty_level] = tmp_data
         # Create group for all data
         tmp_data = []
         for novelty_level in self.possible_novelties:
             for difficulty_level in self.possible_difficulties:
-                index = novelty_level + '_' + difficulty_level
+                index = str(novelty_level) + '_' + difficulty_level
                 tmp_data += data[index]
         data['all'] = tmp_data
         return data
