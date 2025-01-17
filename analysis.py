@@ -34,7 +34,7 @@ from scipy.signal import savgol_filter
 from decimal import Decimal
 import logging
 
-NOVELTY_200 = 200
+NOVELTY_200 = '200'
 DIFFICULTY_EASY = 'easy'
 DETECTION_KNOWN = 'known'
 DETECTION_UNKNOWN = 'unknown'
@@ -57,7 +57,7 @@ class Analysis():
         self.use_possible_novelties = options.use_novelty_list
         self.use_possible_difficulties = options.use_difficulty_list
         self.use_visibility_list = options.use_visibility_list
-        self.possible_novelties = list([200, 201, 202, 203, 204, 205, 206, 207, 208])
+        self.possible_novelties = list(['200', '201', '202', '203', '204', '205', '206', '207', '208'])
         self.possible_difficulties = list(['easy', 'medium', 'hard'])
         self.detection_conditions = list(['known', 'unknown'])
         self.extra_per_trial_metrics = options.extras # flag to print extra per trial metrics (for internal use)
@@ -1344,7 +1344,7 @@ class Analysis():
         novelties = list([NOVELTY_200])
         unique_novelties = self.agent_results_df['novelty_level'].unique().tolist()
         if unique_novelties:
-            novelties = unique_novelties
+            novelties = [str(x) for x in unique_novelties]
         return novelties
 
     def get_experiment_difficulties(self):
