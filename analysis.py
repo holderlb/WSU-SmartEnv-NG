@@ -66,14 +66,14 @@ class Analysis():
         self.baseline_results_df = None 
         baseline_results_file = options.baseline_results_file
         if baseline_results_file:
-            print(f'Reading baseline results from local file: {baseline_results_file}')
+            self.log.info(f'Reading baseline results from local file: {baseline_results_file}')
             self.baseline_results_df = pd.read_csv(baseline_results_file)
         
         # Local agent results (LBH)
         self.agent_results_df = None 
         agent_results_file = options.agent_results_file
         if agent_results_file:
-            print(f'Reading agent results from local file: {agent_results_file}')
+            self.log.info(f'Reading agent results from local file: {agent_results_file}')
             self.agent_results_df = pd.read_csv(agent_results_file)
 
         # Setup logging
@@ -1047,8 +1047,7 @@ class Analysis():
         
         # Write per trial metrics, if requested
         if self.details:
-            #self.write_per_trial_metrics(per_trial_metrics, path)
-            self.write_per_trial_metrics_ta3(per_trial_metrics, path)
+            self.write_per_trial_metrics(per_trial_metrics, path)
 
         # Remove any zip file that was already there.
         cmd = 'rm -f {}.zip'.format(path)
@@ -1062,7 +1061,7 @@ class Analysis():
         self.log.info(output)
 
         # Compress the results and remove the source.
-        cmd = 'zip -m -j -r {}.zip {}'.format(path, path)
+        cmd = 'zip -m -r {}.zip {}'.format(path, path)
         p = subprocess.Popen(cmd,
                                 shell=True,
                                 stdin=subprocess.PIPE,
@@ -1139,58 +1138,6 @@ class Analysis():
         return
     
     def write_per_trial_metrics(self, per_trial_metrics, path):
-        """Write metrics to file for each trial in experiment."""
-        filename = 'metrics_per_trial.csv'
-        metricsfilename = os.path.join(path, filename)
-        metricsfile = open(metricsfilename, 'w')
-        metricsfile.write('ta1,ta2_or_baseline,domain,detection_source,' + 
-                          'trial_id,number_of_instances,instance_of_distribution_change,' + 
-                          'novelty_hierarchy_level,difficulty_category_level,' + 
-                          'm1_fn_cdt,m2_cdt,m21_fp,m3_nrp_sys_det,m4_nrp_given_det,optis,iptis,aptis,optig,iptig,aptig,nrm,m31,m41')
-        if self.extra_per_trial_metrics:
-            metricsfile.write(',au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m')
-        metricsfile.write('\n')
-        for (trial_id,trial) in per_trial_metrics.items():
-            linestr = self.ta1_team_name
-            linestr += ',' + trial['ta2']
-            linestr += ',' + self.domain_name
-            linestr += ',' + trial['detection_source']
-            linestr += ',' + str(trial['trial_index'] + 1)
-            linestr += ',' + str(trial['num_episodes'])
-            linestr += ',' + str(trial['novelty_episode'] + 1)
-            linestr += ',' + str(trial['novelty_level'])
-            linestr += ',' + str(trial['difficulty'])
-            linestr += ',' + (str(trial['m1']) if trial['detection_source'] == 'system' else '')
-            linestr += ',' + (str(trial['m2']) if trial['detection_source'] == 'system' else '')
-            linestr += ',' + (str(trial['m2_1']) if trial['detection_source'] == 'system' else '')
-            linestr += ',' + (str(trial['m3']) if trial['detection_source'] == 'system' else '')
-            linestr += ',' + (str(trial['m4']) if trial['detection_source'] == 'given' else '')
-            if trial['detection_source'] == 'system':
-                linestr += ',' + str(trial['am1']) # OPTIs
-                linestr += ',' + str(trial['am4']) # IPTIs
-                linestr += ',' + str(trial['am2']) # APTIs
-                linestr += ',,,' # OPTIg, IPTIg, APTIg not relevant
-            else: # given detection
-                linestr += ',,,' # OPTIs, IPTIs, APTIs not relevant
-                linestr += ',' + str(trial['am1']) # OPTIg
-                linestr += ',' + str(trial['am4']) # IPTIg
-                linestr += ',' + str(trial['am2']) # APTIg
-            linestr += ',' + str(trial['nrm'])
-            # New M3.1 and M4.1 metrics
-            linestr += ',' + (str(trial['m3_1']) if trial['detection_source'] == 'system' else '')
-            linestr += ',' + (str(trial['m4_1']) if trial['detection_source'] == 'given' else '')
-            if self.extra_per_trial_metrics:
-                linestr += ',' + (str(trial['au_amoc']) if trial['detection_source'] == 'system' else '')
-                linestr += ',' + str(trial['pre_perf_all'])
-                linestr += ',' + str(trial['post_perf_all'])
-                linestr += ',' + str(trial['post_perf_first_m'])
-                linestr += ',' + str(trial['post_perf_last_m'])
-            linestr += '\n'
-            metricsfile.write(linestr)
-        metricsfile.close()
-        return
-    
-    def write_per_trial_metrics_ta3(self, per_trial_metrics, path):
         """Write metrics to file for each trial in experiment.
         This version follows the requested format from TA3.
         The TA2 results and Baseline results are written to separate files."""
@@ -1638,55 +1585,7 @@ class Analysis():
 
             plt.cla()
         return
-
-    def generate_all_plot_old(self, ta2_data, sota_data, novelty_introduced_indices, path):
-        """Generates a plot for all of the data"""
-        self.log.debug('generate_all_plots()')
-        plt.figure()
-        novelty_introduced_index = np.mean(novelty_introduced_indices)
-        ta2_average_performance = np.mean(
-            [x['performance'] for x in ta2_data], axis=0)
-        sota_average_performance = np.mean(
-            [x['performance'] for x in sota_data], axis=0)
-
-        plt.ylim(0.0, 1.05) # LBH: changed upper limit from 1.0 to 1.05 to clearly see 1.0 performance
-        plt.ylabel('Performance')
-        plt.xlabel('Episodes')
-        
-        ta2_average_performance = ta2_average_performance[~pd.isnull(
-            ta2_average_performance)]
-        sota_average_performance = sota_average_performance[~pd.isnull(
-            sota_average_performance)]
-
-        ta2_x_values = np.array(range(len(ta2_average_performance)))
-        sota_x_values = np.array(range(len(sota_average_performance)))
-
-        plt.plot(ta2_x_values,
-                 self.smooth(ta2_average_performance),
-                 label='Agent',
-                 color='black')
-        plt.plot(sota_x_values,
-                 self.smooth(sota_average_performance),
-                 label='Baseline',
-                 color='gold')
-        plt.axvline(novelty_introduced_index,
-                    0,
-                    1,
-                    label='Novelty Introduced',
-                    color='gray',
-                    linestyle=':')
-        plt.legend()
-
-        label = 'Averages for all data'
-        plt.title(label)
-
-        filename = 'averages_all.png'
-        plt.savefig(os.path.join(path, filename), bbox_inches='tight')
-
-        plt.cla()
-        return
     
-    # New version that aligns plot at max BRB episode
     def generate_all_plot(self, ta2_data, sota_data, novelty_introduced_indices, path):
         """Generates a plot for all of the data"""
         self.log.debug('generate_all_plots()')
