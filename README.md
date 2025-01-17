@@ -25,6 +25,20 @@ provides two different novelty detectors based on traditional concept and data d
 as implemented in the [Frouros](https://github.com/IFCA-Advanced-Computing/frouros) package, which
 is included here as submodule.
 
+## Agent Design
+
+The main goal of this novelty generator is to support the evaluation of a novelty-aware agent. Several
+of the evaluation metrics (see `metrics.pdf`) rely on comparing the target agent to a baseline agent,
+to measure the amount of improvement gained by the novelty awareness. You can implement your own agent
+by modifying the `SmartEnvAgent.py` file. You will need to modify most of the methods in the `SmartEnvAgent`
+class to have your agent classify new data, detect novelty, receive feedback, retrain if necessary,
+and reset the agent at the beginning of each trial.
+
+The current `SmartEnvAgent` class is setup to implement a non-learning version as the baseline, and a learning
+version as the target agent (see the `--learning` option in the next section). You will run an experiment
+on each of the two agents, generating two CSV files of results. These two CSV files will then be input
+to the analysis script to generate plots and metric spreadsheets detailing the evaluation.
+
 ## Run Experiment
 
 We recommend you run the WSU-SmartEnv in a standalone conda environment. The `smartenv.yml` file can be
@@ -88,9 +102,11 @@ python analysis.py --experimentid=smartenv_012345 --baseline=baseline-results.cs
 The analysis script requires an `experimentid`, which is used in the name of the generated zip file. The
 script also requires the results CSV files for the baseline agent `--baseline` and the target agent `--agent`.
 The baseline and target agent results CSV files should include the same results in terms of the novelty
-levels, difficulty levels, and trials. The analysis script sends information to the given `--logfile` and
+levels, difficulty levels, and trials. The analysis script writes information to the given `--logfile` and
 generates a zip file (e.g., `experiment_smartenv_012345.zip`) containing both metrics (CSV) and plots (PNG)
-broken down by novelty levels and difficulty levels. See the `metrics.pdf` file for an explanation of the
+broken down by novelty levels and difficulty levels. The plots show average performance over all trials
+for the particular configuration (novelty level, difficulty level), where the performance curves are shifted
+so that the episodes of novelty introduction are aligned. See the `metrics.pdf` file for an explanation of the
 metrics.
 
 ## Data
