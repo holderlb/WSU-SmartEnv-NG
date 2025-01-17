@@ -365,7 +365,7 @@ class Analysis():
                     trial_dict['m3'] = m3
                     trial_dict['m3_1'] = m3_1
                 for trial in sota_data[configuration]:
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_num = trial_dict['trial_num']
                     trial_dict['m1'] = 0
                     trial_dict['m2'] = 0
@@ -427,12 +427,12 @@ class Analysis():
             
             if specific_config:
                 for trial,am1,am2,am4 in zip(ta2_data[configuration],am1_values,am2_values,am4_values):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['am1'] = am1
                     trial_dict['am2'] = am2
                     trial_dict['am4'] = am4
                 for trial in sota_data[configuration]:
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['am1'] = 0
                     trial_dict['am2'] = 0
                     trial_dict['am4'] = 0
@@ -468,7 +468,7 @@ class Analysis():
             
             if specific_config:
                 for trial,nrm in zip(ta2_data[configuration],nrms):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     if nrm < 2:
                         trial_dict['nrm'] = 1
                     else:
@@ -494,7 +494,7 @@ class Analysis():
             
             if specific_config:
                 for trial,nrm_beta in zip(sota_data[configuration],nrms_beta):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     if nrm_beta < 2:
                         trial_dict['nrm'] = 1
                     else:
@@ -530,7 +530,7 @@ class Analysis():
                             ta2_post_means,
                             p_post_first_alpha_means,
                             p_post_alpha_means):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['au_amoc'] = au_amoc
                     trial_dict['pre_perf_all'] = pre_perf_all
                     trial_dict['post_perf_all'] = post_perf_all
@@ -543,7 +543,7 @@ class Analysis():
                             sota_post_means,
                             p_post_first_beta_means,
                             p_post_beta_means):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['au_amoc'] = au_amoc
                     trial_dict['pre_perf_all'] = pre_perf_all
                     trial_dict['post_perf_all'] = post_perf_all
@@ -597,7 +597,7 @@ class Analysis():
                     trial_dict['num_episodes'] = len(trial['trial_num'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
-                    per_trial_metrics[trial['trial_id'][0]] = trial_dict
+                    per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
                 for trial, novelty_introduced in zip(sota_data[configuration], ta2_novelty_introduced_indices[configuration]):
                     trial_dict = dict()
                     trial_dict['ta2'] = 'Baseline'
@@ -608,7 +608,7 @@ class Analysis():
                     trial_dict['num_episodes'] = len(trial['trial_num'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
-                    per_trial_metrics[trial['trial_id'][0]] = trial_dict
+                    per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
             
             #known_m1[configuration] = '-'
             #known_m2[configuration] = '-'
@@ -662,11 +662,11 @@ class Analysis():
 
             if specific_config:
                 for trial,m4,m4_1 in zip(ta2_data[configuration],m4_values,m4_1_values):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['m4'] = m4
                     trial_dict['m4_1'] = m4_1
                 for trial in sota_data[configuration]:
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['m4'] = 0
                     trial_dict['m4_1'] = 0
 
@@ -716,12 +716,12 @@ class Analysis():
             
             if specific_config:
                 for trial,am1,am2,am4 in zip(ta2_data[configuration],am1_values,am2_values,am4_values):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['am1'] = am1
                     trial_dict['am2'] = am2
                     trial_dict['am4'] = am4
                 for trial in sota_data[configuration]:
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['am1'] = 0
                     trial_dict['am2'] = 0
                     trial_dict['am4'] = 0
@@ -752,7 +752,7 @@ class Analysis():
             
             if specific_config:
                 for trial,nrm in zip(ta2_data[configuration],nrms):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     if nrm < 2:
                         trial_dict['nrm'] = 1
                     else:
@@ -774,7 +774,7 @@ class Analysis():
             
             if specific_config:
                 for trial,nrm_beta in zip(sota_data[configuration],nrms_beta):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     if nrm_beta < 2:
                         trial_dict['nrm'] = 1
                     else:
@@ -810,7 +810,7 @@ class Analysis():
                             ta2_post_means,
                             p_post_first_alpha_means,
                             p_post_alpha_means):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['au_amoc'] = au_amoc
                     trial_dict['pre_perf_all'] = pre_perf_all
                     trial_dict['post_perf_all'] = post_perf_all
@@ -823,7 +823,7 @@ class Analysis():
                             sota_post_means,
                             p_post_first_beta_means,
                             p_post_beta_means):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_dict['au_amoc'] = au_amoc
                     trial_dict['pre_perf_all'] = pre_perf_all
                     trial_dict['post_perf_all'] = post_perf_all
