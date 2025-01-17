@@ -44,9 +44,9 @@ DETECTION_UNKNOWN = 'unknown'
 DETECTION_TRANSLATION = dict({0: DETECTION_UNKNOWN, 1: DETECTION_KNOWN})
 FLOAT_NEAR_ZERO = 0.00001 # used as placeholder for zero denominators
 
-def np_mean(x, axis=0):
+def np_mean(x, ax=None):
     if len(x) > 0:
-        return np.mean(x, axis)
+        return np.mean(x, axis=ax)
     else:
         return 0
 
@@ -304,9 +304,8 @@ class Analysis():
             sota_pre_novelty = [sota_data[configuration][i]['performance']
                                 [:ta2_novelty_introduced_indices[configuration][i]].tolist()
                                 for i in range(len(sota_data[configuration]))]
-            ta2_post_novelty_m = [ta2_data[configuration][i]['performance'][-m:]
-                                    .tolist() for i in
-                                    range(len(ta2_data[configuration]))]
+            ta2_post_novelty_m = [ta2_data[configuration][i]['performance'][-m:].tolist()
+                                  for i in range(len(ta2_data[configuration]))]
             sota_pre_novelty = self.to_float(sota_pre_novelty)
             ta2_post_novelty_m = self.to_float(ta2_post_novelty_m)
 
@@ -316,20 +315,16 @@ class Analysis():
                             else FLOAT_NEAR_ZERO for i in range(len(sota_pre_novelty))]
             p_post_alpha_means = [float(np.mean(ta2_post_novelty_m[i]))
                             for i in range(len(ta2_post_novelty_m))]
-
-            #unknown_m3[configuration] = np.mean(
-            #    [p_post_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_alpha_means))])
             m3_values = [p_post_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_alpha_means))]
             unknown_m3[configuration] = self.get_stats(m3_values)
             
             # M3.1
             ta2_post_novelty_first_m = [ta2_data[configuration][i]['performance']
-                                        [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m]
-                                    .tolist() for i in
-                                    range(len(ta2_data[configuration]))]
+                                        [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m].tolist()
+                                        for i in range(len(ta2_data[configuration]))]
             ta2_post_novelty_first_m = self.to_float(ta2_post_novelty_first_m)
 
-            p_post_first_alpha_means = [float(np.mean(ta2_post_novelty_first_m[i]))
+            p_post_first_alpha_means = [float(np_mean(ta2_post_novelty_first_m[i]))
                             for i in range(len(ta2_post_novelty_first_m))]
             m3_1_values = [p_post_first_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_first_alpha_means))]
             unknown_m3_1[configuration] = self.get_stats(m3_1_values)
