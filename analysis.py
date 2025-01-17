@@ -1804,7 +1804,7 @@ class Analysis():
                 for difficulty_level in self.possible_difficulties:
                     if difficulty_level not in metrics[detection_condition][novelty_level]:
                         metrics[detection_condition][novelty_level][difficulty_level] = dict()
-                    csv_file_name = 'metrics_' + detection_condition + '_novelty_' + novelty_level \
+                    csv_file_name = 'metrics_' + detection_condition + '_novelty_' + str(novelty_level) \
                                     + '_difficulty_' + difficulty_level + '.csv'
                     csv_file_name = os.path.join(path, csv_file_name)
                     with open(csv_file_name, mode='r') as csv_file:
@@ -1819,7 +1819,7 @@ class Analysis():
                 if novelty_level not in metrics_novelty[detection_condition]:
                     metrics_novelty[detection_condition][novelty_level] = dict()
                 csv_file_name = 'metrics_' + detection_condition + '_novelty_' \
-                                + novelty_level + '.csv'
+                                + str(novelty_level) + '.csv'
                 csv_file_name = os.path.join(path, csv_file_name)
                 with open(csv_file_name, mode='r') as csv_file:
                     csv_reader = csv.DictReader(csv_file)
@@ -1864,7 +1864,7 @@ class Analysis():
                         for difficulty_level in self.possible_difficulties:
                             # print(str(metrics[detection_condition][novelty_level][
                             # difficulty_level]))
-                            line_str = 'Level ' + novelty_level + ' - ' + difficulty_level
+                            line_str = 'Level ' + str(novelty_level) + ' - ' + difficulty_level
                             line_str += ',' + metrics[detection_condition][novelty_level][
                                 difficulty_level][measure]['Min']
                             line_str += ',' + metrics[detection_condition][novelty_level][
@@ -1879,7 +1879,7 @@ class Analysis():
                                 difficulty_level][measure]['StdDev']
                             csv_file.write(line_str + '\n')
                     for novelty_level in self.possible_novelties:
-                        line_str = 'Level ' + novelty_level + ' - easy/medium/hard'
+                        line_str = 'Level ' + str(novelty_level) + ' - easy/medium/hard'
                         line_str += ',' + \
                                     metrics_novelty[detection_condition][novelty_level][measure][
                                         'Min']
