@@ -46,7 +46,7 @@ def run_experiment(args, logger): # serial
     if trials:
         # Output CSV header
         with open(output_file, 'w') as out_file:
-            out_file.write('trial_index,trial_id,novelty_level,novelty_difficulty,novelty_visibility,episode_index,performance,novelty_initiated,novelty_predicted\n')
+            out_file.write('trial_index,trial_id,novelty_level,novelty_difficulty,novelty_visibility,episode_index,performance,novelty_initiated,novelty_probability,novelty_threshold\n')
         for trial in trials:
             agent = SmartEnvAgent(logger, novelty_detection)
             run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty_detection, learning)
@@ -66,7 +66,7 @@ def run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty
     agent.reset_model(training_data_path)
     novelty_description = {'trial_id': trial_id, 'novelty': novelty_level, 'visibility': novelty_visibility, 'difficulty': novelty_difficulty}
     agent.trial_start(trial_index, novelty_description)
-    novelty_predicted = False
+    novelty_detected = False
     agent.testing_start()
     trial_episodes = get_episodes(trial_id, experiment_id, experiment_path)
     for episode in trial_episodes:
@@ -97,13 +97,13 @@ def run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty
             if prediction == feature_label:
                 num_correct += 1
             performance = num_correct / num_instances
-            # if novelty_detection=CDD|DDD and learning=T, then feedback only after novelty_predicted, but keep going
+            # if novelty_detection=CDD|DDD and learning=T, then feedback only after novelty_detected, but keep going
             # if novelty_detection=CDD|DDD and learning=F, then no feedback ever and stop after novelty
             # if novelty_detection=None and learning=T, then always feedback and keep going
             # if novelty_detection=None and learning=F, then no feedback ever, but keep going
             feedback = None
             if learning:
-                if (novelty_detection is None) or novelty_predicted:
+                if (novelty_detection is None) or novelty_detected:
                     if random.random() < BUDGET:
                         feedback = feature_label
             agent.testing_performance(performance, feedback)
@@ -112,11 +112,11 @@ def run_trial(agent, trial, experiment_id, experiment_path, output_file, novelty
         novelty_probability, novelty_threshold, novelty, novelty_characterization = agent.testing_episode_end(performance, feedback)
         # Process novelty response
         if (novelty_probability >= novelty_threshold):
-            novelty_predicted = True
+            novelty_detected = True
         # Output episode info
         with open(output_file, 'a') as out_file:
-            out_file.write(f'{trial_index},{trial_id},{novelty_level},{novelty_difficulty},{novelty_visibility},{episode_index},{performance},{novelty_initiated},{novelty_predicted}\n')
-        if (not learning) and novelty_detection and novelty_initiated and novelty_predicted:
+            out_file.write(f'{trial_index},{trial_id},{novelty_level},{novelty_difficulty},{novelty_visibility},{episode_index},{performance},{novelty_initiated},{novelty_probability},{novelty_threshold}\n')
+        if (not learning) and novelty_detection and novelty_initiated and novelty_detected:
             break # stop early
         # Save model at the end of each episode, overwriting previous model (uncomment, if desired)
         #if learning:

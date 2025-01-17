@@ -271,8 +271,8 @@ class Analysis():
                     trial_dict['novelty_level'] = config_split[0]
                     trial_dict['difficulty'] = config_split[1]
                     trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_num'] = trial.iloc[0]['trial_num']
-                    trial_dict['num_episodes'] = len(trial['trial_num'])
+                    trial_dict['trial_index'] = trial.iloc[0]['trial_index']
+                    trial_dict['num_episodes'] = len(trial['trial_index'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
                     per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
@@ -282,8 +282,8 @@ class Analysis():
                     trial_dict['novelty_level'] = config_split[0]
                     trial_dict['difficulty'] = config_split[1]
                     trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_num'] = trial.iloc[0]['trial_num']
-                    trial_dict['num_episodes'] = len(trial['trial_num'])
+                    trial_dict['trial_index'] = trial.iloc[0]['trial_index']
+                    trial_dict['num_episodes'] = len(trial['trial_index'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
                     per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
@@ -352,7 +352,7 @@ class Analysis():
                                                                                 ta2_false_positive_counts[configuration],
                                                                                 m3_values,m3_1_values):
                     trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_num = trial_dict['trial_num']
+                    trial_num = trial_dict['trial_index']
                     if trial_num in cdt_indices:
                         trial_dict['m1'] = false_negative_count
                         trial_dict['m2'] = 1
@@ -366,7 +366,7 @@ class Analysis():
                     trial_dict['m3_1'] = m3_1
                 for trial in sota_data[configuration]:
                     trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_num = trial_dict['trial_num']
+                    trial_num = trial_dict['trial_index']
                     trial_dict['m1'] = 0
                     trial_dict['m2'] = 0
                     trial_dict['m2_1'] = 0
@@ -593,8 +593,8 @@ class Analysis():
                     trial_dict['novelty_level'] = config_split[0]
                     trial_dict['difficulty'] = config_split[1]
                     trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_num'] = trial['trial_num'][0]
-                    trial_dict['num_episodes'] = len(trial['trial_num'])
+                    trial_dict['trial_index'] = trial['trial_index'][0]
+                    trial_dict['num_episodes'] = len(trial['trial_index'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
                     per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
@@ -604,8 +604,8 @@ class Analysis():
                     trial_dict['novelty_level'] = config_split[0]
                     trial_dict['difficulty'] = config_split[1]
                     trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_num'] = trial['trial_num'][0]
-                    trial_dict['num_episodes'] = len(trial['trial_num'])
+                    trial_dict['trial_index'] = trial['trial_index'][0]
+                    trial_dict['num_episodes'] = len(trial['trial_index'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
                     per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
@@ -1105,7 +1105,7 @@ class Analysis():
     
     def add_characterization(self, trial_dict, trial):
         # Get characterization for last episode in trial and add components to trial dict
-        num_episodes = len(trial['trial_num'])
+        num_episodes = len(trial['trial_index'])
         nov_char_dict = trial.iloc[num_episodes-1]['novelty_characterization']
         if type(nov_char_dict) is str:
             nov_char_dict = json.loads(nov_char_dict)
@@ -1173,7 +1173,7 @@ class Analysis():
             linestr += ',' + trial['ta2']
             linestr += ',' + self.domain_name
             linestr += ',' + trial['detection_source']
-            linestr += ',' + str(trial['trial_num'] + 1)
+            linestr += ',' + str(trial['trial_index'] + 1)
             linestr += ',' + str(trial['num_episodes'])
             linestr += ',' + str(trial['novelty_episode'] + 1)
             linestr += ',' + str(trial['novelty_level'])
@@ -1226,7 +1226,7 @@ class Analysis():
                 linestr = self.ta1_team_name
                 linestr += ',' + trial['ta2']
                 linestr += ',' + self.domain_name
-                linestr += ',' + str(trial['trial_num'] + 1)
+                linestr += ',' + str(trial['trial_index'] + 1)
                 linestr += ',' + str(trial['num_episodes'])
                 linestr += ',' + str(trial['novelty_episode'] + 1)
                 # Report novelty level as single digit
@@ -1283,7 +1283,7 @@ class Analysis():
                 trial['novelty_level'] == ta2_trial['novelty_level'] and
                 trial['difficulty'] == ta2_trial['difficulty'] and
                 trial['detection_source'] == ta2_trial['detection_source'] and
-                trial['trial_num'] == ta2_trial['trial_num']):
+                trial['trial_index'] == ta2_trial['trial_index']):
                 return trial['nrm']
         self.log.error("get_baseline_nrm: can't find Baseline trial corresponding to TA2 trial.")
     
@@ -1430,11 +1430,10 @@ class Analysis():
             episodes[configuration] = []
             for trial_id in experiment_trials[configuration]:
                 results = results_df[results_df['trial_id'] == trial_id]
-                # Align column names to what later processing expects
-                results = results.rename(columns={'novelty_predicted': 'novelty_detected', 'trial_index': 'trial_num'})
+                results['novelty_detected'] = (results['novelty_probability'] >= results['novelty_threshold'])
                 results['novelty_characterization'] = json.dumps({'source': 'local'})
                 episodes[configuration].append(results)
-            episodes[configuration].sort(key=lambda i: i.iloc[0]['trial_num']) # LBH: sorting by 'trial_num', not 'trial_id'
+            episodes[configuration].sort(key=lambda i: i.iloc[0]['trial_index'])
         return episodes
 
     def get_novelty_introduced_indices(self, episode_data, hidden=False):
@@ -1523,11 +1522,11 @@ class Analysis():
                 natural_config = self.configuration_to_natural_words(
                     configuration)
                 label = 'Perf: {0} {1} Trial {2} (ID {3}'.format(
-                    condition, natural_config, ta2_data['trial_num'][0], ta2_data['trial_id'][0])
+                    condition, natural_config, ta2_data['trial_index'][0], ta2_data['trial_id'][0])
                 plt.title(label)
 
                 filename = 'perf_{0}_{1}_trial_{2}_id_{3}.png'.format(
-                    condition.lower(), natural_config.lower(), ta2_data['trial_num'][0], ta2_data['trial_id'][0])
+                    condition.lower(), natural_config.lower(), ta2_data['trial_index'][0], ta2_data['trial_id'][0])
                 plt.savefig(os.path.join(path, filename), bbox_inches='tight')
 
                 plt.cla()
@@ -1553,11 +1552,11 @@ class Analysis():
 
                 natural_config = self.configuration_to_natural_words(configuration)
                 label = 'AMOC: {0} {1} Trial {2} (ID {3})'.format(
-                    condition, natural_config, ta2_data['trial_num'][0], ta2_data['trial_id'][0])
+                    condition, natural_config, ta2_data['trial_index'][0], ta2_data['trial_id'][0])
                 plt.title(label)
 
                 filename = 'amoc_{0}_{1}_trial_{2}_id_{3}.png'.format(
-                    condition.lower(), natural_config.lower(), ta2_data['trial_num'][0], ta2_data['trial_id'][0])
+                    condition.lower(), natural_config.lower(), ta2_data['trial_index'][0], ta2_data['trial_id'][0])
                 plt.savefig(os.path.join(path, filename), bbox_inches='tight')
 
                 plt.cla()
