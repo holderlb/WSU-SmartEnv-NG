@@ -271,22 +271,22 @@ class Analysis():
                     trial_dict['novelty_level'] = config_split[0]
                     trial_dict['difficulty'] = config_split[1]
                     trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_num'] = trial['trial_num'][0]
+                    trial_dict['trial_num'] = trial.iloc[0]['trial_num']
                     trial_dict['num_episodes'] = len(trial['trial_num'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
-                    per_trial_metrics[trial['trial_id'][0]] = trial_dict
+                    per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
                 for trial, novelty_introduced in zip(sota_data[configuration], ta2_novelty_introduced_indices[configuration]):
                     trial_dict = dict()
                     trial_dict['ta2'] = 'Baseline'
                     trial_dict['novelty_level'] = config_split[0]
                     trial_dict['difficulty'] = config_split[1]
                     trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_num'] = trial['trial_num'][0]
+                    trial_dict['trial_num'] = trial.iloc[0]['trial_num']
                     trial_dict['num_episodes'] = len(trial['trial_num'])
                     trial_dict['novelty_episode'] = novelty_introduced
                     self.add_characterization(trial_dict, trial)
-                    per_trial_metrics[trial['trial_id'][0]] = trial_dict
+                    per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
                     
             cdt_indices = np.where(
                 ta2_correctly_detected_trial[configuration])[0]
