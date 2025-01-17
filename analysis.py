@@ -1361,6 +1361,7 @@ class Analysis():
             for trial_id in experiment_trials[configuration]:
                 results = results_df[results_df['trial_id'] == trial_id]
                 results = results.copy()
+                results = results.reset_index(drop=True)
                 results['novelty_detected'] = (results['novelty_probability'] >= results['novelty_threshold'])
                 results['novelty_characterization'] = json.dumps({'source': 'local'})
                 episodes[configuration].append(results)
