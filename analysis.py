@@ -246,7 +246,7 @@ class Analysis():
         per_trial_metrics = dict()
         
         for configuration in ta2_data:
-            
+            self.log.debug(f'Configuration: {configuration}')
             detection_source = 'system'
             # Collect per trial metrics for specific configurations, i.e., specific novelty and difficulty
             specific_config = False
