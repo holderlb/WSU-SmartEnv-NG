@@ -1406,16 +1406,16 @@ class Analysis():
         sota_unknown_trial_ids = {}
         for novelty in self.possible_novelties:
             for difficulty in self.possible_difficulties:
-                ta2_known_trial_ids[novelty + '_' + difficulty] = ta2_experiment_trials.query(
+                ta2_known_trial_ids[str(novelty) + '_' + difficulty] = ta2_experiment_trials.query(
                     'novelty_visibility == 1 & novelty_level == {0} & novelty_difficulty == \'{1}\''
                     .format(novelty, difficulty))['trial_id']
-                ta2_unknown_trial_ids[novelty + '_' + difficulty] = ta2_experiment_trials.query(
+                ta2_unknown_trial_ids[str(novelty) + '_' + difficulty] = ta2_experiment_trials.query(
                     'novelty_visibility == 0 & novelty_level == {0} & novelty_difficulty == \'{1}\''
                     .format(novelty, difficulty))['trial_id']
-                sota_known_trial_ids[novelty + '_' + difficulty] = sota_experiment_trials.query(
+                sota_known_trial_ids[str(novelty) + '_' + difficulty] = sota_experiment_trials.query(
                     'novelty_visibility == 1 & novelty_level == {0} & novelty_difficulty == \'{1}\''
                     .format(novelty, difficulty))['trial_id']
-                sota_unknown_trial_ids[novelty + '_' + difficulty] = sota_experiment_trials.query(
+                sota_unknown_trial_ids[str(novelty) + '_' + difficulty] = sota_experiment_trials.query(
                     'novelty_visibility == 0 & novelty_level == {0} & novelty_difficulty == \'{1}\''
                     .format(novelty, difficulty))['trial_id']
         return ta2_known_trial_ids, ta2_unknown_trial_ids, sota_known_trial_ids, \
