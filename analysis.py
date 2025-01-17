@@ -351,7 +351,7 @@ class Analysis():
                                                                                 ta2_false_negative_counts[configuration],
                                                                                 ta2_false_positive_counts[configuration],
                                                                                 m3_values,m3_1_values):
-                    trial_dict = per_trial_metrics[trial['trial_id'][0]]
+                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
                     trial_num = trial_dict['trial_num']
                     if trial_num in cdt_indices:
                         trial_dict['m1'] = false_negative_count
