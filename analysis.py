@@ -62,6 +62,19 @@ class Analysis():
         self.detection_conditions = list(['known', 'unknown'])
         self.extra_per_trial_metrics = options.extras # flag to print extra per trial metrics (for internal use)
 
+        # Setup logging
+        file_handler = logging.FileHandler(self.logfile, mode='w')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        self.log = logging.getLogger('analysis')
+        log_level = logging.WARNING
+        if self.printout:
+            log_level = logging.INFO
+        if self.debug:
+            log_level = logging.DEBUG
+        self.log.setLevel(log_level)
+        self.log.addHandler(file_handler)        
+
         # Local baseline results (LBH)
         self.baseline_results_df = None 
         baseline_results_file = options.baseline_results_file
@@ -75,19 +88,6 @@ class Analysis():
         if agent_results_file:
             self.log.info(f'Reading agent results from local file: {agent_results_file}')
             self.agent_results_df = pd.read_csv(agent_results_file)
-
-        # Setup logging
-        file_handler = logging.FileHandler(self.logfile, mode='w')
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        self.log = logging.getLogger('analysis')
-        log_level = logging.WARNING
-        if self.printout:
-            log_level = logging.INFO
-        if self.debug:
-            log_level = logging.DEBUG
-        self.log.setLevel(log_level)
-        self.log.addHandler(file_handler)        
 
         return
 
