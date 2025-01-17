@@ -103,6 +103,9 @@ class Analysis():
         # Populate self.detection_conditions if the command line arg was not passed.
         if not self.use_visibility_list:
             self.detection_conditions = self.get_experiment_detection_conditions()
+        KNOWN = True
+        if 'known' not in self.detection_conditions:
+            KNOWN = False
 
         # Get trial ids - These are stored in a dictionary with keys
         # corresponding to each combination of novelty_difficulty for each configuration
@@ -119,8 +122,9 @@ class Analysis():
         sota_unknown_episode_data = self.get_episode_data(sota_unknown_trial_ids, self.baseline_results_df)
 
         # Get novelty introduction indices for each episode as well as CDT info
-        ta2_known_novelty_introduced_indices, _, _, _, _, ta2_known_true_negative_counts, _ = \
-            self.get_novelty_introduced_indices(ta2_known_episode_data)
+        if KNOWN:
+            ta2_known_novelty_introduced_indices, _, _, _, _, ta2_known_true_negative_counts, _ = \
+                self.get_novelty_introduced_indices(ta2_known_episode_data)
         (ta2_unknown_novelty_introduced_indices,
             ta2_unknown_false_positive_counts,
             #  ta2_unknown_true_positive_counts,
@@ -138,8 +142,9 @@ class Analysis():
             os.makedirs(path)
 
         if self.plottrials:
-            self.generate_trial_plots(ta2_known_episode_data, sota_known_episode_data,
-                                        ta2_known_novelty_introduced_indices, path, 'Known')
+            if KNOWN:
+                self.generate_trial_plots(ta2_known_episode_data, sota_known_episode_data,
+                                          ta2_known_novelty_introduced_indices, path, 'Known')
             self.generate_trial_plots(ta2_unknown_episode_data, sota_unknown_episode_data,
                                         ta2_unknown_novelty_introduced_indices, path, 'Unknown')
         
@@ -166,22 +171,22 @@ class Analysis():
         ta2_unknown_first_true_positive_indices = self.generate_remaining_groups(
             ta2_unknown_first_true_positive_indices)
 
-        ta2_known_episode_data = self.generate_remaining_groups(
-            ta2_known_episode_data)
-        sota_known_episode_data = self.generate_remaining_groups(
-            sota_known_episode_data)
-        ta2_known_true_negative_counts = self.generate_remaining_groups(
-            ta2_known_true_negative_counts)
-        ta2_known_novelty_introduced_indices = self.generate_remaining_groups(
-            ta2_known_novelty_introduced_indices)
+        ta2_all_episode_data = ta2_unknown_episode_data['all']
+        sota_all_episode_data = sota_unknown_episode_data['all']
+        ta2_all_novelty_introduced_indices = ta2_unknown_novelty_introduced_indices['all']
+        if KNOWN:
+            ta2_known_episode_data = self.generate_remaining_groups(
+                ta2_known_episode_data)
+            sota_known_episode_data = self.generate_remaining_groups(
+                sota_known_episode_data)
+            ta2_known_true_negative_counts = self.generate_remaining_groups(
+                ta2_known_true_negative_counts)
+            ta2_known_novelty_introduced_indices = self.generate_remaining_groups(
+                ta2_known_novelty_introduced_indices)
 
-        ta2_all_episode_data = ta2_unknown_episode_data['all'] + \
-            ta2_known_episode_data['all']
-        sota_all_episode_data = sota_unknown_episode_data['all'] + \
-            sota_known_episode_data['all']
-        ta2_all_novelty_introduced_indices = ta2_unknown_novelty_introduced_indices[
-            'all'] + ta2_known_novelty_introduced_indices[
-            'all']
+            ta2_all_episode_data += ta2_known_episode_data['all']
+            sota_all_episode_data  += sota_known_episode_data['all']
+            ta2_all_novelty_introduced_indices += ta2_known_novelty_introduced_indices['all']
 
         self.generate_all_plot(ta2_all_episode_data, sota_all_episode_data,
                                 ta2_all_novelty_introduced_indices, path)
@@ -524,289 +529,291 @@ class Analysis():
                     trial_dict['post_perf_first_m'] = post_perf_first_m
                     trial_dict['post_perf_last_m'] = post_perf_last_m
 
-        # known case:
-        known_m1 = dict() # FN_CDT (n/a)
-        known_m2 = dict() # CDT_% (n/a)
-        known_m2_1 = dict() # FP_% (n/a)
-        
-        ### New Metric (TN_%) = TN / N_pre
-        known_m2_2 = dict()
-        
-        known_m3 = dict() # NRP system detection (n/a)
-        known_m4 = dict() # NRP given detection, based on asymptotic performance (last 10% of episodes)
-        known_m3_1 = dict() # NRP system detection (n/a)
-        known_m4_1 = dict() # NRP given detection, based on post-novelty performance (first 10% of novel episodes)
-        known_am1 = dict() # AM1: OPTIg (Overall Performance Task Improvement (PTI), given detection (known))
-        known_am2 = dict() # AM2: APTIg (Asymptotic PTI, given detection (known))
-        known_am3 = dict() # AM3: AMOC
-        known_am4 = dict() # AM4: IPTIg (Initial PTI, given detection (known))
-        known_nrm = dict() # NRM alpha
-        known_nrm_beta = dict() # NRM beta/baseline
-        
-        # Requested metrics: average pre-novelty and post-novelty performance for baseline and TA2
-        known_pre_sota = dict()
-        known_pre_ta2 = dict()
-        known_post_sota = dict()
-        known_post_ta2 = dict()
-
-        ta2_data = ta2_known_episode_data
-        sota_data = sota_known_episode_data
-        ta2_true_negative_counts = ta2_known_true_negative_counts
-        ta2_novelty_introduced_indices = ta2_known_novelty_introduced_indices
-        for configuration in ta2_data:
+        if KNOWN:
+            # known case:
+            known_m1 = dict() # FN_CDT (n/a)
+            known_m2 = dict() # CDT_% (n/a)
+            known_m2_1 = dict() # FP_% (n/a)
             
-            detection_source = 'given'
-            # Collect per trial metrics for specific configurations, i.e., specific novelty and difficulty
-            specific_config = False
-            config_split = configuration.split('_')
-            if len(config_split) == 2:
-                specific_config = True
-                for trial, novelty_introduced in zip(ta2_data[configuration], ta2_novelty_introduced_indices[configuration]):
-                    trial_dict = dict()
-                    trial_dict['ta2'] = self.ta2_team_name
-                    trial_dict['novelty_level'] = config_split[0]
-                    trial_dict['difficulty'] = config_split[1]
-                    trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_index'] = trial['trial_index'][0]
-                    trial_dict['num_episodes'] = len(trial['trial_index'])
-                    trial_dict['novelty_episode'] = novelty_introduced
-                    self.add_characterization(trial_dict, trial)
-                    per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
-                for trial, novelty_introduced in zip(sota_data[configuration], ta2_novelty_introduced_indices[configuration]):
-                    trial_dict = dict()
-                    trial_dict['ta2'] = 'Baseline'
-                    trial_dict['novelty_level'] = config_split[0]
-                    trial_dict['difficulty'] = config_split[1]
-                    trial_dict['detection_source'] = detection_source
-                    trial_dict['trial_index'] = trial['trial_index'][0]
-                    trial_dict['num_episodes'] = len(trial['trial_index'])
-                    trial_dict['novelty_episode'] = novelty_introduced
-                    self.add_characterization(trial_dict, trial)
-                    per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
+            ### New Metric (TN_%) = TN / N_pre
+            known_m2_2 = dict()
             
-            #known_m1[configuration] = '-'
-            #known_m2[configuration] = '-'
-            #known_m2_1[configuration] = '-'
-
-            # M4 is for the known case, M3 is for the unknown case so set it to be blank
-            #known_m3[configuration] = '-'
+            known_m3 = dict() # NRP system detection (n/a)
+            known_m4 = dict() # NRP given detection, based on asymptotic performance (last 10% of episodes)
+            known_m3_1 = dict() # NRP system detection (n/a)
+            known_m4_1 = dict() # NRP given detection, based on post-novelty performance (first 10% of novel episodes)
+            known_am1 = dict() # AM1: OPTIg (Overall Performance Task Improvement (PTI), given detection (known))
+            known_am2 = dict() # AM2: APTIg (Asymptotic PTI, given detection (known))
+            known_am3 = dict() # AM3: AMOC
+            known_am4 = dict() # AM4: IPTIg (Initial PTI, given detection (known))
+            known_nrm = dict() # NRM alpha
+            known_nrm_beta = dict() # NRM beta/baseline
             
-            # LBH: with stats
-            known_m1[configuration] = '-,-,-,-,-,-'
-            known_m2[configuration] = '-,-,-,-,-,-'
-            known_m2_1[configuration] = '-,-,-,-,-,-'
-            known_m3[configuration] = '-,-,-,-,-,-'
-            known_m3_1[configuration] = '-,-,-,-,-,-'
-            
-            ### New Metric (%TN) = #TN / N_pre
-            true_negative_counts = np.array(ta2_true_negative_counts[configuration])
-            n_pre = np.array([ta2_novelty_introduced_indices[configuration][i]
-                                if ta2_novelty_introduced_indices[configuration][i] > 0 else 1
-                                for i in range(len(ta2_data[configuration]))])
-            known_m2_2[configuration] = self.get_stats(true_negative_counts / n_pre)
+            # Requested metrics: average pre-novelty and post-novelty performance for baseline and TA2
+            known_pre_sota = dict()
+            known_pre_ta2 = dict()
+            known_post_sota = dict()
+            known_post_ta2 = dict()
 
-            # M4 prep
-            sota_pre_novelty = [sota_data[configuration][i]['performance']
-                                [:ta2_novelty_introduced_indices[configuration][i]].tolist()
-                                for i in range(len(sota_data[configuration]))]
-            ta2_post_novelty_m = [ta2_data[configuration][i]['performance'][-m:]
-                                    .tolist() for i in
-                                    range(len(ta2_data[configuration]))]
+            ta2_data = ta2_known_episode_data
+            sota_data = sota_known_episode_data
+            ta2_true_negative_counts = ta2_known_true_negative_counts
+            ta2_novelty_introduced_indices = ta2_known_novelty_introduced_indices
+            for configuration in ta2_data:
+                
+                detection_source = 'given'
+                # Collect per trial metrics for specific configurations, i.e., specific novelty and difficulty
+                specific_config = False
+                config_split = configuration.split('_')
+                if len(config_split) == 2:
+                    specific_config = True
+                    for trial, novelty_introduced in zip(ta2_data[configuration], ta2_novelty_introduced_indices[configuration]):
+                        trial_dict = dict()
+                        trial_dict['ta2'] = self.ta2_team_name
+                        trial_dict['novelty_level'] = config_split[0]
+                        trial_dict['difficulty'] = config_split[1]
+                        trial_dict['detection_source'] = detection_source
+                        trial_dict['trial_index'] = trial['trial_index'][0]
+                        trial_dict['num_episodes'] = len(trial['trial_index'])
+                        trial_dict['novelty_episode'] = novelty_introduced
+                        self.add_characterization(trial_dict, trial)
+                        per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
+                    for trial, novelty_introduced in zip(sota_data[configuration], ta2_novelty_introduced_indices[configuration]):
+                        trial_dict = dict()
+                        trial_dict['ta2'] = 'Baseline'
+                        trial_dict['novelty_level'] = config_split[0]
+                        trial_dict['difficulty'] = config_split[1]
+                        trial_dict['detection_source'] = detection_source
+                        trial_dict['trial_index'] = trial['trial_index'][0]
+                        trial_dict['num_episodes'] = len(trial['trial_index'])
+                        trial_dict['novelty_episode'] = novelty_introduced
+                        self.add_characterization(trial_dict, trial)
+                        per_trial_metrics[trial.iloc[0]['trial_id']] = trial_dict
+                
+                #known_m1[configuration] = '-'
+                #known_m2[configuration] = '-'
+                #known_m2_1[configuration] = '-'
 
-            # Preventing dividing by zero by setting p_pre_beta to be small if = 0 (This should
-            # never happen but just in case)
-            p_pre_beta = [float(np.mean(sota_pre_novelty[i])) if np.mean(sota_pre_novelty[i]) > 0
-                            else FLOAT_NEAR_ZERO for i in range(len(sota_pre_novelty))]
-            p_post_alpha_means = [float(np.mean(ta2_post_novelty_m[i]))
-                            for i in range(len(ta2_post_novelty_m))]
-            
-            m4_values = [p_post_alpha_means[i] / p_pre_beta[i]
-                            for i in range(len(p_post_alpha_means))]
-            known_m4[configuration] = self.get_stats(m4_values)
-            
-            # M4.1
-            ta2_post_novelty_first_m = [ta2_data[configuration][i]['performance']
-                                        [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m]
-                                    .tolist() for i in
-                                    range(len(ta2_data[configuration]))]
-            p_post_first_alpha_means = [float(np.mean(ta2_post_novelty_first_m[i]))
-                            for i in range(len(ta2_post_novelty_first_m))]
-            m4_1_values = [p_post_first_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_first_alpha_means))]
-            known_m4_1[configuration] = self.get_stats(m4_1_values)
+                # M4 is for the known case, M3 is for the unknown case so set it to be blank
+                #known_m3[configuration] = '-'
+                
+                # LBH: with stats
+                known_m1[configuration] = '-,-,-,-,-,-'
+                known_m2[configuration] = '-,-,-,-,-,-'
+                known_m2_1[configuration] = '-,-,-,-,-,-'
+                known_m3[configuration] = '-,-,-,-,-,-'
+                known_m3_1[configuration] = '-,-,-,-,-,-'
+                
+                ### New Metric (%TN) = #TN / N_pre
+                true_negative_counts = np.array(ta2_true_negative_counts[configuration])
+                n_pre = np.array([ta2_novelty_introduced_indices[configuration][i]
+                                    if ta2_novelty_introduced_indices[configuration][i] > 0 else 1
+                                    for i in range(len(ta2_data[configuration]))])
+                known_m2_2[configuration] = self.get_stats(true_negative_counts / n_pre)
 
-            if specific_config:
-                for trial,m4,m4_1 in zip(ta2_data[configuration],m4_values,m4_1_values):
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_dict['m4'] = m4
-                    trial_dict['m4_1'] = m4_1
-                for trial in sota_data[configuration]:
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_dict['m4'] = 0
-                    trial_dict['m4_1'] = 0
-
-            sota_post_novelty = [sota_data[configuration][i]['performance']
-                                    [ta2_novelty_introduced_indices[configuration][i]:].tolist()
+                # M4 prep
+                sota_pre_novelty = [sota_data[configuration][i]['performance']
+                                    [:ta2_novelty_introduced_indices[configuration][i]].tolist()
                                     for i in range(len(sota_data[configuration]))]
-            ta2_post_novelty = [ta2_data[configuration][i]['performance']
-                                [ta2_novelty_introduced_indices[configuration][i]:].tolist()
-                                for i in range(len(ta2_data[configuration]))]
-            
-            # AM1: OPTIg
-            am1_values = [sum(ta2_post_novelty[i]) / (sum(sota_post_novelty[i]) + sum(ta2_post_novelty[i]))
-                    if (sum(sota_post_novelty[i]) + sum(ta2_post_novelty[i])) > 0 else 0
-                    for i in range(len(sota_post_novelty))]
-            known_am1[configuration] = self.get_stats(am1_values)
+                ta2_post_novelty_m = [ta2_data[configuration][i]['performance'][-m:]
+                                        .tolist() for i in
+                                        range(len(ta2_data[configuration]))]
 
-            sota_post_novelty_m = [sota_data[configuration][i]['performance'][-m:]
-                                    .tolist() for i in range(len(sota_data[configuration]))]
-            p_post_alpha = [float(sum(ta2_post_novelty_m[i]))
-                            for i in range(len(ta2_post_novelty_m))]
-            p_post_beta = [float(sum(sota_post_novelty_m[i])) if sum(sota_post_novelty_m[i]) > 0
-                            else FLOAT_NEAR_ZERO for i in range(len(sota_post_novelty_m))]
+                # Preventing dividing by zero by setting p_pre_beta to be small if = 0 (This should
+                # never happen but just in case)
+                p_pre_beta = [float(np.mean(sota_pre_novelty[i])) if np.mean(sota_pre_novelty[i]) > 0
+                                else FLOAT_NEAR_ZERO for i in range(len(sota_pre_novelty))]
+                p_post_alpha_means = [float(np.mean(ta2_post_novelty_m[i]))
+                                for i in range(len(ta2_post_novelty_m))]
+                
+                m4_values = [p_post_alpha_means[i] / p_pre_beta[i]
+                                for i in range(len(p_post_alpha_means))]
+                known_m4[configuration] = self.get_stats(m4_values)
+                
+                # M4.1
+                ta2_post_novelty_first_m = [ta2_data[configuration][i]['performance']
+                                            [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m]
+                                        .tolist() for i in
+                                        range(len(ta2_data[configuration]))]
+                p_post_first_alpha_means = [float(np.mean(ta2_post_novelty_first_m[i]))
+                                for i in range(len(ta2_post_novelty_first_m))]
+                m4_1_values = [p_post_first_alpha_means[i] / p_pre_beta[i] for i in range(len(p_post_first_alpha_means))]
+                known_m4_1[configuration] = self.get_stats(m4_1_values)
 
-            # AM2: APTIg (old, un-normalized)
-            #known_am2[configuration] = self.get_stats( #np.mean( # LBH: with stats
-            #    [p_post_alpha[i] / p_post_beta[i] for i in range(len(p_post_alpha))])
-            
-            # AM2: APTIg (new, normalized)
-            am2_values = [(p_post_alpha[i] / (p_post_alpha[i] + p_post_beta[i]))
-                    if (p_post_alpha[i] + p_post_beta[i]) > 0 else 0
-                    for i in range(len(p_post_alpha))]
-            known_am2[configuration] = self.get_stats(am2_values)
-            
-            # AM4: IPTIg
-            sota_post_novelty_first_m = [sota_data[configuration][i]['performance']
-                                        [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m]
-                                    .tolist() for i in
-                                    range(len(sota_data[configuration]))]
-            p_post_alpha_first_m = [sum(ta2_post_novelty_first_m[i])
-                            for i in range(len(ta2_post_novelty_first_m))]
-            p_post_beta_first_m = [sum(sota_post_novelty_first_m[i]) if sum(sota_post_novelty_first_m[i]) > 0
-                            else FLOAT_NEAR_ZERO for i in range(len(sota_post_novelty_first_m))]
-            am4_values = [(float(p_post_alpha_first_m[i]) / (float(p_post_alpha_first_m[i]) + float(p_post_beta_first_m[i])))
-                    if (float(p_post_alpha_first_m[i]) + float(p_post_beta_first_m[i])) > 0 else 0
-                    for i in range(len(p_post_alpha_first_m))]
-            known_am4[configuration] = self.get_stats(am4_values)
-            
-            if specific_config:
-                for trial,am1,am2,am4 in zip(ta2_data[configuration],am1_values,am2_values,am4_values):
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_dict['am1'] = am1
-                    trial_dict['am2'] = am2
-                    trial_dict['am4'] = am4
-                for trial in sota_data[configuration]:
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_dict['am1'] = 0
-                    trial_dict['am2'] = 0
-                    trial_dict['am4'] = 0
-            
-            # AM3: AU-AMOC
-            # known_am3[configuration] = ['-', '-']
-            #known_am3[configuration] = '-'
-            
-            # LBH: with stats
-            known_am3[configuration] = '-,-,-,-,-,-'
-            
-            # nrm (NRM alpha) version in TA3 slides from 05/29/2021               
-            ta2_pre_novelty = [ta2_data[configuration][i]['performance']
-                                [:ta2_novelty_introduced_indices[configuration][i]].tolist()
-                                for i in range(len(ta2_data[configuration]))]
-            ta2_post_means = [float(np.mean(ta2_post_novelty[i]))
-                                if len(ta2_post_novelty[i]) > 0 else 0
-                                for i in range(len(ta2_data[configuration]))]
-            ta2_pre_means = [float(np.mean(ta2_pre_novelty[i]))
-                                if len(ta2_pre_novelty[i]) > 0 else 0
-                                for i in range(len(ta2_data[configuration]))]
-            ta2_abs_diffs = np.abs(np.subtract(ta2_post_means, ta2_pre_means))
-            ta2_pre_stds = np.array([float(np.std(ta2_pre_novelty[i])) if np.std(ta2_pre_novelty[i]) > 0
-                            else FLOAT_NEAR_ZERO for i in range(len(ta2_data[configuration]))])
-            nrms = ta2_abs_diffs / ta2_pre_stds
-            nrm = sum(nrms < 2) / len(nrms)
-            known_nrm[configuration] = self.get_stats(np.array([nrm]))
-            
-            if specific_config:
-                for trial,nrm in zip(ta2_data[configuration],nrms):
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    if nrm < 2:
-                        trial_dict['nrm'] = 1
-                    else:
-                        trial_dict['nrm'] = 0
-            
-            # NRM beta/baseline              
-            sota_post_means = [np.mean(sota_post_novelty[i])
-                                if len(sota_post_novelty[i]) > 0 else 0
-                                for i in range(len(sota_data[configuration]))]
-            sota_pre_means = [np.mean(sota_pre_novelty[i])
-                                if len(sota_pre_novelty[i]) > 0 else 0
-                                for i in range(len(sota_data[configuration]))]
-            sota_abs_diffs = np.abs(np.subtract(sota_post_means, sota_pre_means))
-            sota_pre_stds = [np.std(sota_pre_novelty[i]) if np.std(sota_pre_novelty[i]) > 0
-                            else FLOAT_NEAR_ZERO for i in range(len(sota_data[configuration]))]
-            nrms_beta = sota_abs_diffs / sota_pre_stds
-            nrm_beta = sum(nrms_beta < 2) / len(nrms_beta)
-            known_nrm_beta[configuration] = self.get_stats(np.array([nrm_beta]))
-            
-            if specific_config:
-                for trial,nrm_beta in zip(sota_data[configuration],nrms_beta):
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    if nrm_beta < 2:
-                        trial_dict['nrm'] = 1
-                    else:
-                        trial_dict['nrm'] = 0
-                        
-            # Extra metrics
-            known_pre_sota[configuration] = self.get_stats(sota_pre_means)
-            known_pre_ta2[configuration] = self.get_stats(ta2_pre_means)
-            known_post_sota[configuration] = self.get_stats(sota_post_means)
-            known_post_ta2[configuration] = self.get_stats(ta2_post_means)
-            
-            if specific_config and self.extra_per_trial_metrics:
-                sota_am3s = []
-                num_trials = len(sota_data[configuration])
-                for trial_index in range(num_trials):
-                    amoc_points = self.AMOC(sota_data[configuration][trial_index],
-                                        ta2_novelty_introduced_indices[configuration][trial_index]) # yes, ta2 (avoids computing for sota, which should be the same)
-                    xs = [fs[0] for fs in amoc_points]
-                    ys = [fs[1] for fs in amoc_points]
-                    sota_am3s.append(np.trapz(y=ys, x=xs)) # trapz = area under (x,y) curve
+                if specific_config:
+                    for trial,m4,m4_1 in zip(ta2_data[configuration],m4_values,m4_1_values):
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        trial_dict['m4'] = m4
+                        trial_dict['m4_1'] = m4_1
+                    for trial in sota_data[configuration]:
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        trial_dict['m4'] = 0
+                        trial_dict['m4_1'] = 0
+
+                sota_post_novelty = [sota_data[configuration][i]['performance']
+                                        [ta2_novelty_introduced_indices[configuration][i]:].tolist()
+                                        for i in range(len(sota_data[configuration]))]
+                ta2_post_novelty = [ta2_data[configuration][i]['performance']
+                                    [ta2_novelty_introduced_indices[configuration][i]:].tolist()
+                                    for i in range(len(ta2_data[configuration]))]
+                
+                # AM1: OPTIg
+                am1_values = [sum(ta2_post_novelty[i]) / (sum(sota_post_novelty[i]) + sum(ta2_post_novelty[i]))
+                        if (sum(sota_post_novelty[i]) + sum(ta2_post_novelty[i])) > 0 else 0
+                        for i in range(len(sota_post_novelty))]
+                known_am1[configuration] = self.get_stats(am1_values)
+
+                sota_post_novelty_m = [sota_data[configuration][i]['performance'][-m:]
+                                        .tolist() for i in range(len(sota_data[configuration]))]
+                p_post_alpha = [float(sum(ta2_post_novelty_m[i]))
+                                for i in range(len(ta2_post_novelty_m))]
+                p_post_beta = [float(sum(sota_post_novelty_m[i])) if sum(sota_post_novelty_m[i]) > 0
+                                else FLOAT_NEAR_ZERO for i in range(len(sota_post_novelty_m))]
+
+                # AM2: APTIg (old, un-normalized)
+                #known_am2[configuration] = self.get_stats( #np.mean( # LBH: with stats
+                #    [p_post_alpha[i] / p_post_beta[i] for i in range(len(p_post_alpha))])
+                
+                # AM2: APTIg (new, normalized)
+                am2_values = [(p_post_alpha[i] / (p_post_alpha[i] + p_post_beta[i]))
+                        if (p_post_alpha[i] + p_post_beta[i]) > 0 else 0
+                        for i in range(len(p_post_alpha))]
+                known_am2[configuration] = self.get_stats(am2_values)
+                
+                # AM4: IPTIg
                 sota_post_novelty_first_m = [sota_data[configuration][i]['performance']
-                                                [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m] # yes, ta2 (avoids computing for sota, which should be the same)
-                                                .tolist() for i in
-                                                range(len(sota_data[configuration]))]
-                p_post_first_beta_means = [np.mean(sota_post_novelty_first_m[i])
-                                            for i in range(len(sota_post_novelty_first_m))]
-                p_post_beta_means = [np.mean(sota_post_novelty_m[i])
-                                        for i in range(len(sota_post_novelty_m))]
-                for trial,au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m in \
-                        zip(ta2_data[configuration],
-                            ta2_am3s,
-                            ta2_pre_means,
-                            ta2_post_means,
-                            p_post_first_alpha_means,
-                            p_post_alpha_means):
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_dict['au_amoc'] = au_amoc
-                    trial_dict['pre_perf_all'] = pre_perf_all
-                    trial_dict['post_perf_all'] = post_perf_all
-                    trial_dict['post_perf_first_m'] = post_perf_first_m
-                    trial_dict['post_perf_last_m'] = post_perf_last_m
-                for trial,au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m in \
-                        zip(sota_data[configuration],
-                            sota_am3s,
-                            sota_pre_means,
-                            sota_post_means,
-                            p_post_first_beta_means,
-                            p_post_beta_means):
-                    trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
-                    trial_dict['au_amoc'] = au_amoc
-                    trial_dict['pre_perf_all'] = pre_perf_all
-                    trial_dict['post_perf_all'] = post_perf_all
-                    trial_dict['post_perf_first_m'] = post_perf_first_m
-                    trial_dict['post_perf_last_m'] = post_perf_last_m
+                                            [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m]
+                                        .tolist() for i in
+                                        range(len(sota_data[configuration]))]
+                p_post_alpha_first_m = [sum(ta2_post_novelty_first_m[i])
+                                for i in range(len(ta2_post_novelty_first_m))]
+                p_post_beta_first_m = [sum(sota_post_novelty_first_m[i]) if sum(sota_post_novelty_first_m[i]) > 0
+                                else FLOAT_NEAR_ZERO for i in range(len(sota_post_novelty_first_m))]
+                am4_values = [(float(p_post_alpha_first_m[i]) / (float(p_post_alpha_first_m[i]) + float(p_post_beta_first_m[i])))
+                        if (float(p_post_alpha_first_m[i]) + float(p_post_beta_first_m[i])) > 0 else 0
+                        for i in range(len(p_post_alpha_first_m))]
+                known_am4[configuration] = self.get_stats(am4_values)
+                
+                if specific_config:
+                    for trial,am1,am2,am4 in zip(ta2_data[configuration],am1_values,am2_values,am4_values):
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        trial_dict['am1'] = am1
+                        trial_dict['am2'] = am2
+                        trial_dict['am4'] = am4
+                    for trial in sota_data[configuration]:
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        trial_dict['am1'] = 0
+                        trial_dict['am2'] = 0
+                        trial_dict['am4'] = 0
+                
+                # AM3: AU-AMOC
+                # known_am3[configuration] = ['-', '-']
+                #known_am3[configuration] = '-'
+                
+                # LBH: with stats
+                known_am3[configuration] = '-,-,-,-,-,-'
+                
+                # nrm (NRM alpha) version in TA3 slides from 05/29/2021               
+                ta2_pre_novelty = [ta2_data[configuration][i]['performance']
+                                    [:ta2_novelty_introduced_indices[configuration][i]].tolist()
+                                    for i in range(len(ta2_data[configuration]))]
+                ta2_post_means = [float(np.mean(ta2_post_novelty[i]))
+                                    if len(ta2_post_novelty[i]) > 0 else 0
+                                    for i in range(len(ta2_data[configuration]))]
+                ta2_pre_means = [float(np.mean(ta2_pre_novelty[i]))
+                                    if len(ta2_pre_novelty[i]) > 0 else 0
+                                    for i in range(len(ta2_data[configuration]))]
+                ta2_abs_diffs = np.abs(np.subtract(ta2_post_means, ta2_pre_means))
+                ta2_pre_stds = np.array([float(np.std(ta2_pre_novelty[i])) if np.std(ta2_pre_novelty[i]) > 0
+                                else FLOAT_NEAR_ZERO for i in range(len(ta2_data[configuration]))])
+                nrms = ta2_abs_diffs / ta2_pre_stds
+                nrm = sum(nrms < 2) / len(nrms)
+                known_nrm[configuration] = self.get_stats(np.array([nrm]))
+                
+                if specific_config:
+                    for trial,nrm in zip(ta2_data[configuration],nrms):
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        if nrm < 2:
+                            trial_dict['nrm'] = 1
+                        else:
+                            trial_dict['nrm'] = 0
+                
+                # NRM beta/baseline              
+                sota_post_means = [np.mean(sota_post_novelty[i])
+                                    if len(sota_post_novelty[i]) > 0 else 0
+                                    for i in range(len(sota_data[configuration]))]
+                sota_pre_means = [np.mean(sota_pre_novelty[i])
+                                    if len(sota_pre_novelty[i]) > 0 else 0
+                                    for i in range(len(sota_data[configuration]))]
+                sota_abs_diffs = np.abs(np.subtract(sota_post_means, sota_pre_means))
+                sota_pre_stds = [np.std(sota_pre_novelty[i]) if np.std(sota_pre_novelty[i]) > 0
+                                else FLOAT_NEAR_ZERO for i in range(len(sota_data[configuration]))]
+                nrms_beta = sota_abs_diffs / sota_pre_stds
+                nrm_beta = sum(nrms_beta < 2) / len(nrms_beta)
+                known_nrm_beta[configuration] = self.get_stats(np.array([nrm_beta]))
+                
+                if specific_config:
+                    for trial,nrm_beta in zip(sota_data[configuration],nrms_beta):
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        if nrm_beta < 2:
+                            trial_dict['nrm'] = 1
+                        else:
+                            trial_dict['nrm'] = 0
+                            
+                # Extra metrics
+                known_pre_sota[configuration] = self.get_stats(sota_pre_means)
+                known_pre_ta2[configuration] = self.get_stats(ta2_pre_means)
+                known_post_sota[configuration] = self.get_stats(sota_post_means)
+                known_post_ta2[configuration] = self.get_stats(ta2_post_means)
+                
+                if specific_config and self.extra_per_trial_metrics:
+                    sota_am3s = []
+                    num_trials = len(sota_data[configuration])
+                    for trial_index in range(num_trials):
+                        amoc_points = self.AMOC(sota_data[configuration][trial_index],
+                                            ta2_novelty_introduced_indices[configuration][trial_index]) # yes, ta2 (avoids computing for sota, which should be the same)
+                        xs = [fs[0] for fs in amoc_points]
+                        ys = [fs[1] for fs in amoc_points]
+                        sota_am3s.append(np.trapz(y=ys, x=xs)) # trapz = area under (x,y) curve
+                    sota_post_novelty_first_m = [sota_data[configuration][i]['performance']
+                                                    [ta2_novelty_introduced_indices[configuration][i]:ta2_novelty_introduced_indices[configuration][i]+m] # yes, ta2 (avoids computing for sota, which should be the same)
+                                                    .tolist() for i in
+                                                    range(len(sota_data[configuration]))]
+                    p_post_first_beta_means = [np.mean(sota_post_novelty_first_m[i])
+                                                for i in range(len(sota_post_novelty_first_m))]
+                    p_post_beta_means = [np.mean(sota_post_novelty_m[i])
+                                            for i in range(len(sota_post_novelty_m))]
+                    for trial,au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m in \
+                            zip(ta2_data[configuration],
+                                ta2_am3s,
+                                ta2_pre_means,
+                                ta2_post_means,
+                                p_post_first_alpha_means,
+                                p_post_alpha_means):
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        trial_dict['au_amoc'] = au_amoc
+                        trial_dict['pre_perf_all'] = pre_perf_all
+                        trial_dict['post_perf_all'] = post_perf_all
+                        trial_dict['post_perf_first_m'] = post_perf_first_m
+                        trial_dict['post_perf_last_m'] = post_perf_last_m
+                    for trial,au_amoc,pre_perf_all,post_perf_all,post_perf_first_m,post_perf_last_m in \
+                            zip(sota_data[configuration],
+                                sota_am3s,
+                                sota_pre_means,
+                                sota_post_means,
+                                p_post_first_beta_means,
+                                p_post_beta_means):
+                        trial_dict = per_trial_metrics[trial.iloc[0]['trial_id']]
+                        trial_dict['au_amoc'] = au_amoc
+                        trial_dict['pre_perf_all'] = pre_perf_all
+                        trial_dict['post_perf_all'] = post_perf_all
+                        trial_dict['post_perf_first_m'] = post_perf_first_m
+                        trial_dict['post_perf_last_m'] = post_perf_last_m
 
         # Creates plots for each combination of the data
-        self.generate_average_plots(ta2_known_episode_data, sota_known_episode_data,
-                                    ta2_known_novelty_introduced_indices, path, 'Known')
+        if KNOWN:
+            self.generate_average_plots(ta2_known_episode_data, sota_known_episode_data,
+                                        ta2_known_novelty_introduced_indices, path, 'Known')
         self.generate_average_plots(ta2_unknown_episode_data, sota_unknown_episode_data,
                                     ta2_unknown_novelty_introduced_indices, path, 'Unknown')
 
@@ -934,105 +941,106 @@ class Analysis():
                                 str(unknown_post_ta2[configuration]['norm_median']) + ',' +
                                 str(unknown_post_ta2[configuration]['stddev']) + '\n')
             metricsfile.close()
-            
-        for configuration in known_m1:
-            filename = 'metrics_known_{0}.csv'.format(
-                self.configuration_to_natural_words(configuration).lower())
-            metricsfilename = os.path.join(path, filename)
-            metricsfile = open(metricsfilename, 'w')
-            # LBH: with stats
-            metricsfile.write('Measure,Min,Max,Mean,Median,Norm-Median,StdDev\n')
-            metricsfile.write('M1,' + str(known_m1[configuration]) + '\n')
-            metricsfile.write('M2,' + str(known_m2[configuration]) + '\n')
-            metricsfile.write('M2.1,' + str(known_m2_1[configuration]) + '\n')
-            metricsfile.write('M3,' + str(known_m3[configuration]) + '\n')
-            metricsfile.write('M3.1,' + str(known_m3_1[configuration]) + '\n')
-            metricsfile.write('M4,' +
-                                str(known_m4[configuration]['min']) + ',' +
-                                str(known_m4[configuration]['max']) + ',' +
-                                str(known_m4[configuration]['mean']) + ',' +
-                                str(known_m4[configuration]['median']) + ',' +
-                                str(known_m4[configuration]['norm_median']) + ',' +
-                                str(known_m4[configuration]['stddev']) + '\n')
-            metricsfile.write('M4.1,' +
-                                str(known_m4_1[configuration]['min']) + ',' +
-                                str(known_m4_1[configuration]['max']) + ',' +
-                                str(known_m4_1[configuration]['mean']) + ',' +
-                                str(known_m4_1[configuration]['median']) + ',' +
-                                str(known_m4_1[configuration]['norm_median']) + ',' +
-                                str(known_m4_1[configuration]['stddev']) + '\n')
-            metricsfile.write('OPTI,' +
-                                str(known_am1[configuration]['min']) + ',' +
-                                str(known_am1[configuration]['max']) + ',' +
-                                str(known_am1[configuration]['mean']) + ',' +
-                                str(known_am1[configuration]['median']) + ',' +
-                                str(known_am1[configuration]['norm_median']) + ',' +
-                                str(known_am1[configuration]['stddev']) + '\n')
-            metricsfile.write('IPTI,' +
-                                str(known_am4[configuration]['min']) + ',' +
-                                str(known_am4[configuration]['max']) + ',' +
-                                str(known_am4[configuration]['mean']) + ',' +
-                                str(known_am4[configuration]['median']) + ',' +
-                                str(known_am4[configuration]['norm_median']) + ',' +
-                                str(known_am4[configuration]['stddev']) + '\n')
-            metricsfile.write('APTI,' +
-                                str(known_am2[configuration]['min']) + ',' +
-                                str(known_am2[configuration]['max']) + ',' +
-                                str(known_am2[configuration]['mean']) + ',' +
-                                str(known_am2[configuration]['median']) + ',' +
-                                str(known_am2[configuration]['norm_median']) + ',' +
-                                str(known_am2[configuration]['stddev']) + '\n')
-            metricsfile.write('AMOC,' + str(known_am3[configuration]) + '\n')
-            metricsfile.write('NRM,' +
-                                str(known_nrm[configuration]['min']) + ',' +
-                                str(known_nrm[configuration]['max']) + ',' +
-                                str(known_nrm[configuration]['mean']) + ',' +
-                                str(known_nrm[configuration]['median']) + ',' +
-                                str(known_nrm[configuration]['norm_median']) + ',' +
-                                str(known_nrm[configuration]['stddev']) + '\n')
-            metricsfile.write('NRM_beta,' +
-                                str(known_nrm_beta[configuration]['min']) + ',' +
-                                str(known_nrm_beta[configuration]['max']) + ',' +
-                                str(known_nrm_beta[configuration]['mean']) + ',' +
-                                str(known_nrm_beta[configuration]['median']) + ',' +
-                                str(known_nrm_beta[configuration]['norm_median']) + ',' +
-                                str(known_nrm_beta[configuration]['stddev']) + '\n')
-            metricsfile.write('M2.2,' +
-                                str(known_m2_2[configuration]['min']) + ',' +
-                                str(known_m2_2[configuration]['max']) + ',' +
-                                str(known_m2_2[configuration]['mean']) + ',' +
-                                str(known_m2_2[configuration]['median']) + ',' +
-                                str(known_m2_2[configuration]['norm_median']) + ',' +
-                                str(known_m2_2[configuration]['stddev']) + '\n')
-            metricsfile.write('PRE_SOTA,' +
-                                str(known_pre_sota[configuration]['min']) + ',' +
-                                str(known_pre_sota[configuration]['max']) + ',' +
-                                str(known_pre_sota[configuration]['mean']) + ',' +
-                                str(known_pre_sota[configuration]['median']) + ',' +
-                                str(known_pre_sota[configuration]['norm_median']) + ',' +
-                                str(known_pre_sota[configuration]['stddev']) + '\n')
-            metricsfile.write('PRE_TA2,' +
-                                str(known_pre_ta2[configuration]['min']) + ',' +
-                                str(known_pre_ta2[configuration]['max']) + ',' +
-                                str(known_pre_ta2[configuration]['mean']) + ',' +
-                                str(known_pre_ta2[configuration]['median']) + ',' +
-                                str(known_pre_ta2[configuration]['norm_median']) + ',' +
-                                str(known_pre_ta2[configuration]['stddev']) + '\n')
-            metricsfile.write('POST_SOTA,' +
-                                str(known_post_sota[configuration]['min']) + ',' +
-                                str(known_post_sota[configuration]['max']) + ',' +
-                                str(known_post_sota[configuration]['mean']) + ',' +
-                                str(known_post_sota[configuration]['median']) + ',' +
-                                str(known_post_sota[configuration]['norm_median']) + ',' +
-                                str(known_post_sota[configuration]['stddev']) + '\n')
-            metricsfile.write('POST_TA2,' +
-                                str(known_post_ta2[configuration]['min']) + ',' +
-                                str(known_post_ta2[configuration]['max']) + ',' +
-                                str(known_post_ta2[configuration]['mean']) + ',' +
-                                str(known_post_ta2[configuration]['median']) + ',' +
-                                str(known_post_ta2[configuration]['norm_median']) + ',' +
-                                str(known_post_ta2[configuration]['stddev']) + '\n')
-            metricsfile.close()
+
+        if KNOWN:
+            for configuration in known_m1:
+                filename = 'metrics_known_{0}.csv'.format(
+                    self.configuration_to_natural_words(configuration).lower())
+                metricsfilename = os.path.join(path, filename)
+                metricsfile = open(metricsfilename, 'w')
+                # LBH: with stats
+                metricsfile.write('Measure,Min,Max,Mean,Median,Norm-Median,StdDev\n')
+                metricsfile.write('M1,' + str(known_m1[configuration]) + '\n')
+                metricsfile.write('M2,' + str(known_m2[configuration]) + '\n')
+                metricsfile.write('M2.1,' + str(known_m2_1[configuration]) + '\n')
+                metricsfile.write('M3,' + str(known_m3[configuration]) + '\n')
+                metricsfile.write('M3.1,' + str(known_m3_1[configuration]) + '\n')
+                metricsfile.write('M4,' +
+                                    str(known_m4[configuration]['min']) + ',' +
+                                    str(known_m4[configuration]['max']) + ',' +
+                                    str(known_m4[configuration]['mean']) + ',' +
+                                    str(known_m4[configuration]['median']) + ',' +
+                                    str(known_m4[configuration]['norm_median']) + ',' +
+                                    str(known_m4[configuration]['stddev']) + '\n')
+                metricsfile.write('M4.1,' +
+                                    str(known_m4_1[configuration]['min']) + ',' +
+                                    str(known_m4_1[configuration]['max']) + ',' +
+                                    str(known_m4_1[configuration]['mean']) + ',' +
+                                    str(known_m4_1[configuration]['median']) + ',' +
+                                    str(known_m4_1[configuration]['norm_median']) + ',' +
+                                    str(known_m4_1[configuration]['stddev']) + '\n')
+                metricsfile.write('OPTI,' +
+                                    str(known_am1[configuration]['min']) + ',' +
+                                    str(known_am1[configuration]['max']) + ',' +
+                                    str(known_am1[configuration]['mean']) + ',' +
+                                    str(known_am1[configuration]['median']) + ',' +
+                                    str(known_am1[configuration]['norm_median']) + ',' +
+                                    str(known_am1[configuration]['stddev']) + '\n')
+                metricsfile.write('IPTI,' +
+                                    str(known_am4[configuration]['min']) + ',' +
+                                    str(known_am4[configuration]['max']) + ',' +
+                                    str(known_am4[configuration]['mean']) + ',' +
+                                    str(known_am4[configuration]['median']) + ',' +
+                                    str(known_am4[configuration]['norm_median']) + ',' +
+                                    str(known_am4[configuration]['stddev']) + '\n')
+                metricsfile.write('APTI,' +
+                                    str(known_am2[configuration]['min']) + ',' +
+                                    str(known_am2[configuration]['max']) + ',' +
+                                    str(known_am2[configuration]['mean']) + ',' +
+                                    str(known_am2[configuration]['median']) + ',' +
+                                    str(known_am2[configuration]['norm_median']) + ',' +
+                                    str(known_am2[configuration]['stddev']) + '\n')
+                metricsfile.write('AMOC,' + str(known_am3[configuration]) + '\n')
+                metricsfile.write('NRM,' +
+                                    str(known_nrm[configuration]['min']) + ',' +
+                                    str(known_nrm[configuration]['max']) + ',' +
+                                    str(known_nrm[configuration]['mean']) + ',' +
+                                    str(known_nrm[configuration]['median']) + ',' +
+                                    str(known_nrm[configuration]['norm_median']) + ',' +
+                                    str(known_nrm[configuration]['stddev']) + '\n')
+                metricsfile.write('NRM_beta,' +
+                                    str(known_nrm_beta[configuration]['min']) + ',' +
+                                    str(known_nrm_beta[configuration]['max']) + ',' +
+                                    str(known_nrm_beta[configuration]['mean']) + ',' +
+                                    str(known_nrm_beta[configuration]['median']) + ',' +
+                                    str(known_nrm_beta[configuration]['norm_median']) + ',' +
+                                    str(known_nrm_beta[configuration]['stddev']) + '\n')
+                metricsfile.write('M2.2,' +
+                                    str(known_m2_2[configuration]['min']) + ',' +
+                                    str(known_m2_2[configuration]['max']) + ',' +
+                                    str(known_m2_2[configuration]['mean']) + ',' +
+                                    str(known_m2_2[configuration]['median']) + ',' +
+                                    str(known_m2_2[configuration]['norm_median']) + ',' +
+                                    str(known_m2_2[configuration]['stddev']) + '\n')
+                metricsfile.write('PRE_SOTA,' +
+                                    str(known_pre_sota[configuration]['min']) + ',' +
+                                    str(known_pre_sota[configuration]['max']) + ',' +
+                                    str(known_pre_sota[configuration]['mean']) + ',' +
+                                    str(known_pre_sota[configuration]['median']) + ',' +
+                                    str(known_pre_sota[configuration]['norm_median']) + ',' +
+                                    str(known_pre_sota[configuration]['stddev']) + '\n')
+                metricsfile.write('PRE_TA2,' +
+                                    str(known_pre_ta2[configuration]['min']) + ',' +
+                                    str(known_pre_ta2[configuration]['max']) + ',' +
+                                    str(known_pre_ta2[configuration]['mean']) + ',' +
+                                    str(known_pre_ta2[configuration]['median']) + ',' +
+                                    str(known_pre_ta2[configuration]['norm_median']) + ',' +
+                                    str(known_pre_ta2[configuration]['stddev']) + '\n')
+                metricsfile.write('POST_SOTA,' +
+                                    str(known_post_sota[configuration]['min']) + ',' +
+                                    str(known_post_sota[configuration]['max']) + ',' +
+                                    str(known_post_sota[configuration]['mean']) + ',' +
+                                    str(known_post_sota[configuration]['median']) + ',' +
+                                    str(known_post_sota[configuration]['norm_median']) + ',' +
+                                    str(known_post_sota[configuration]['stddev']) + '\n')
+                metricsfile.write('POST_TA2,' +
+                                    str(known_post_ta2[configuration]['min']) + ',' +
+                                    str(known_post_ta2[configuration]['max']) + ',' +
+                                    str(known_post_ta2[configuration]['mean']) + ',' +
+                                    str(known_post_ta2[configuration]['median']) + ',' +
+                                    str(known_post_ta2[configuration]['norm_median']) + ',' +
+                                    str(known_post_ta2[configuration]['stddev']) + '\n')
+                metricsfile.close()
 
         # Run combine on the results.
         self.run_combine(path)
@@ -1373,7 +1381,6 @@ class Analysis():
         of experiment trials. These are stored in a dictionary with keys
         corresponding to each combination of novelty_difficulty"""
         self.log.debug('get_experiment_trial_ids()')
-
         ta2_known_trial_ids = {}
         ta2_unknown_trial_ids = {}
         sota_known_trial_ids = {}
@@ -1392,8 +1399,7 @@ class Analysis():
                 sota_unknown_trial_ids[str(novelty) + '_' + difficulty] = sota_experiment_trials.query(
                     'novelty_visibility == 0 & novelty_level == {0} & novelty_difficulty == \'{1}\''
                     .format(novelty, difficulty))['trial_id']
-        return ta2_known_trial_ids, ta2_unknown_trial_ids, sota_known_trial_ids, \
-            sota_unknown_trial_ids
+        return ta2_known_trial_ids, ta2_unknown_trial_ids, sota_known_trial_ids, sota_unknown_trial_ids
 
     def get_episode_data(self, experiment_trials, results_df):
         """Gets all of the necessary data from episodes corresponding to given trials and results."""
@@ -1434,20 +1440,14 @@ class Analysis():
                 novelty_introduced = len(trial) # i.e., novelty never introduced
                 if len(novel_episodes) > 0:
                     novelty_introduced = trial[trial['novelty_initiated']].index[0]
-                novelty_introduced_indices[configuration].append(
-                    novelty_introduced)
+                novelty_introduced_indices[configuration].append(novelty_introduced)
                 true_negative_count = len(trial.iloc[0:novelty_introduced].query('not novelty_detected'))
-                true_negative_counts[configuration].append(
-                    true_negative_count)
+                true_negative_counts[configuration].append(true_negative_count)
                 if hidden:
-                    false_positive_count = len(
-                        trial.iloc[0:novelty_introduced].query('novelty_detected'))
-                    true_positive_count = len(
-                        trial.iloc[novelty_introduced:].query('novelty_detected'))
-                    false_positive_counts[configuration].append(
-                        false_positive_count)
-                    true_positive_counts[configuration].append(
-                        true_positive_count)
+                    false_positive_count = len(trial.iloc[0:novelty_introduced].query('novelty_detected'))
+                    true_positive_count = len(trial.iloc[novelty_introduced:].query('novelty_detected'))
+                    false_positive_counts[configuration].append(false_positive_count)
+                    true_positive_counts[configuration].append(true_positive_count)
                     try:
                         first_true_positive_index = trial.iloc[novelty_introduced:].query('novelty_detected').index[0]
                     except IndexError:
@@ -1456,8 +1456,7 @@ class Analysis():
                     first_true_positive_indices[configuration].append(first_true_positive_index)
                     # New approach to FN counts and M1, i.e., M1 = #FN before first FP
                     false_negative_counts[configuration].append(first_true_positive_index - novelty_introduced)
-                    correctly_detected_trial[configuration].append(
-                        (false_positive_count == 0) and (true_positive_count > 0))
+                    correctly_detected_trial[configuration].append((false_positive_count == 0) and (true_positive_count > 0))
         return (novelty_introduced_indices, false_positive_counts, true_positive_counts,
                 first_true_positive_indices, false_negative_counts, true_negative_counts, correctly_detected_trial)
 
