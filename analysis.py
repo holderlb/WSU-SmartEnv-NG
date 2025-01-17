@@ -2027,8 +2027,6 @@ if __name__ == '__main__':
                       help="Use the manually defined visibility list in the class __init__().",
                       default=False)
     (options, args) = parser.parse_args()
-    if options.fulldebug:
-        options.debug = True
 
     agent = Analysis(options)
     agent.analyze_experiment()
