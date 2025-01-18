@@ -109,6 +109,12 @@ for the particular configuration (novelty level, difficulty level), where the pe
 so that the episodes of novelty introduction are aligned. See the `metrics.pdf` file for an explanation of the
 metrics.
 
+There are several other options available to refine the analysis script behavior, but two that are useful for
+a more detailed analysis are `--plottrials` and `--writeplotdata`. If `--plottrials` is given, then a plot of
+each individual trial is produced, in addition to the average-over-trials plots normally produced. If
+`--writeplotdata` is given, then the data used to generate the plots are written to individual CSV files, one
+per plot, so that the results can be included in larger analyses or collective plots.
+
 ## Data
 
 Data for the various novelty levels are available at the following links due to their size.

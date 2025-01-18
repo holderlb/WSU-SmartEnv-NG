@@ -59,6 +59,7 @@ class Analysis():
         self.logfile=options.logfile
         self.plottrials = options.plottrials
         self.plotamocs = options.plotamocs
+        self.writeplotdata = options.writeplotdata
         self.details = options.details
         self.ta1_team_name = options.ta1_team_name
         self.ta2_team_name = options.ta2_team_name
@@ -1450,8 +1451,15 @@ class Analysis():
                 filename = 'perf_{0}_{1}_trial_{2}_id_{3}.png'.format(
                     condition.lower(), natural_config.lower(), ta2_data['trial_index'][0], ta2_data['trial_id'][0])
                 plt.savefig(os.path.join(path, filename), bbox_inches='tight')
-
                 plt.cla()
+
+                if self.writeplotdata:
+                    filename = 'perf_{0}_{1}_trial_{2}_id_{3}.csv'.format(
+                        condition.lower(), natural_config.lower(), ta2_data['trial_num'][0], ta2_data['trial_id'][0])
+                    filepath = os.path.join(path, filename)
+                    sota_perf = sota_data['performance'].tolist()
+                    ta2_perf = ta2_data['performance'].tolist()
+                    self.write_plot_data(filepath, sota_perf, ta2_perf, novelty_introduced_index)
         return
     
     def generate_amoc_plots(self, ta2_episode_data, novelty_introduced_indices, path, condition):
@@ -1584,8 +1592,14 @@ class Analysis():
             filename = 'averages_{0}_{1}.png'.format(
                 condition.lower(), config.lower())
             plt.savefig(os.path.join(path, filename), bbox_inches='tight', dpi=300) # DMKD: increase DPI to 300
-
             plt.cla()
+
+            if self.writeplotdata:
+                filename = 'averages_{0}_{1}.csv'.format(condition.lower(), config.lower())
+                filepath = os.path.join(path, filename)
+                sota_perf = list(sota_average_performance)
+                ta2_perf = list(ta2_average_performance)
+                self.write_plot_data(filepath, sota_perf, ta2_perf, novelty_introduced_index_max)
         return
     
     def generate_all_plot(self, ta2_data, sota_data, novelty_introduced_indices, path):
@@ -1658,8 +1672,35 @@ class Analysis():
 
         filename = 'averages_all.png'
         plt.savefig(os.path.join(path, filename), bbox_inches='tight')
-
         plt.cla()
+
+        if self.writeplotdata:
+            filename = 'averages_all.csv'
+            filepath = os.path.join(path, filename)
+            sota_perf = list(sota_average_performance)
+            ta2_perf = list(ta2_average_performance)
+            self.write_plot_data(filepath, sota_perf, ta2_perf, novelty_introduced_index_max)
+
+        return
+    
+    def write_plot_data(self, filepath, sota_perf, ta2_perf, novelty_index):
+        """Write plot data to CSV file. The _perf arguments are assumed to be lists."""
+        with open(filepath, 'w') as csvfile:
+            csvfile.write('episode,sota_performance,ta2_performance,novelty\n')
+            for i in range(max(len(sota_perf), len(ta2_perf))):
+                row_str = str(i) + ','
+                if i < len(sota_perf):
+                    row_str += str(sota_perf[i])
+                row_str += ','
+                if i < len(ta2_perf):
+                    row_str += str(ta2_perf[i])
+                row_str += ','
+                if i >= novelty_index:
+                    row_str += 'True'
+                else:
+                    row_str += 'False'
+                row_str += '\n'
+                csvfile.write(row_str)
         return
 
     def configuration_to_natural_words(self, configuration):
@@ -1891,6 +1932,11 @@ if __name__ == '__main__':
                       dest="use_visibility_list",
                       action="store_true",
                       help="Use the manually defined visibility list in the class __init__().",
+                      default=False)
+    parser.add_option("--writeplotdata",
+                      dest="writeplotdata",
+                      action="store_true",
+                      help="Write plot data to CSV files along with images.",
                       default=False)
     (options, args) = parser.parse_args()
 
